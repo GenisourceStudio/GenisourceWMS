@@ -1,0 +1,75 @@
+name: genisource-wms
+
+# Ports are deliberately offset from GenisourceMES (8080) and the ERP dev
+# database (5432) so both stacks can run on the same machine.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-genisource_wms}
+      POSTGRES_USER: ${DB_USER:-wms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-wms_dev_password}
+      TZ: Asia/Shanghai
+    volumes:
+      - wms-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-wms} -d ${DB_NAME:-genisource_wms}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    build:
+      context: .
+      dockerfile: deploy/docker/backend.Dockerfile
+      args:
+        MAVEN_MIRROR: ${MAVEN_MIRROR:-central}
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-genisource_wms}
+      DB_USERNAME: ${DB_USER:-wms}
+      DB_PASSWORD: ${DB_PASSWORD:-wms_dev_password}
+      WMS_ADMIN_USERNAME: ${WMS_ADMIN_USERNAME:-admin}
+      WMS_ADMIN_PASSWORD: ${WMS_ADMIN_PASSWORD:-admin123}
+      WMS_JWT_SECRET: ${WMS_JWT_SECRET:-dev-only-jwt-secret-change-me-32-bytes-minimum}
+      TZ: Asia/Shanghai
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Shanghai
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "http_proxy= https_proxy= wget -qO- http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/docker/frontend.Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+    ports:
+      - "${WEB_PORT:-8100}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  wms-db-data:
+    name: genisource-wms-db

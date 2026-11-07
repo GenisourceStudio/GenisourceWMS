@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "Genisource WMS",
+    "subtitle": "仓储管理",
+    "status": "系统在线"
+  },
+  "nav": {
+    "dashboard": "总览",
+    "skus": "基础资料",
+    "inbound": "入库单",
+    "outbound": "出库单",
+    "inventory": "库存查询",
+    "transactions": "库存流水",
+    "logs": "操作日志"
+  },
+  "login": {
+    "kicker": "仓储控制台",
+    "brandTitle": "从一滴，到一整套系统",
+    "brandLead": "PC 后台管资料与单据，手机扫码完成仓内作业。每一笔出入库都有单据、有流水、有操作人。",
+    "title": "登录",
+    "subtitle": "请使用仓库账号登录",
+    "username": "用户名",
+    "password": "密码",
+    "submit": "登录",
+    "submitting": "登录中…",
+    "logout": "退出"
+  },
+  "dashboard": {
+    "kicker": "仓储控制台",
+    "title": "从一滴，到一整套系统",
+    "lead": "PC 后台管资料与单据，手机扫码完成仓内作业。每一笔出入库都有单据、有流水、有操作人。",
+    "kpiPendingOrders": "待处理单据",
+    "kpiTodayInbound": "今日入库（件）",
+    "kpiTodayOutbound": "今日出库（件）",
+    "kpiStockTotal": "库存总量（件）",
+    "systemPanel": "系统状态",
+    "systemPanelNote": "来自后端真实数据",
+    "colStatus": "检查项",
+    "colValue": "结果",
+    "backendVersion": "后端版本",
+    "database": "数据库",
+    "schemaTables": "已建表",
+    "roles": "角色",
+    "loading": "读取中…",
+    "unavailable": "无法连接后端"
+  },
+  "common": {
+    "networkError": "网络异常，请稍后重试",
+    "empty": "暂无数据",
+    "emptyNote": "完成第一张单据后这里会显示记录"
+  }
+}

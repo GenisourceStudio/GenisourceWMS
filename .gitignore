@@ -1,0 +1,19 @@
+# Build dependencies
+node_modules/
+dist/
+target/
+
+# Local Maven repository — the sandbox cannot write ~/.m2, so builds use
+# -Dmaven.repo.local=../.m2-repo. Never commit it.
+.m2-repo/
+
+# Environment
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
+.pnpm-store/

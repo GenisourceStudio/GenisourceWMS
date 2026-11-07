@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "Genisource WMS",
+    "subtitle": "Warehouse",
+    "status": "System online"
+  },
+  "nav": {
+    "dashboard": "Overview",
+    "skus": "Master data",
+    "inbound": "Inbound",
+    "outbound": "Outbound",
+    "inventory": "Inventory",
+    "transactions": "Stock ledger",
+    "logs": "Audit log"
+  },
+  "login": {
+    "kicker": "Warehouse console",
+    "brandTitle": "From one drop to the whole system",
+    "brandLead": "The PC console manages master data and documents; the phone scans execute warehouse work. Every movement has a document, a ledger entry and an operator.",
+    "title": "Sign in",
+    "subtitle": "Use your warehouse account",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "kicker": "Warehouse console",
+    "title": "From one drop to the whole system",
+    "lead": "The PC console manages master data and documents; the phone scans execute warehouse work. Every movement has a document, a ledger entry and an operator.",
+    "kpiPendingOrders": "Open documents",
+    "kpiTodayInbound": "Inbound today",
+    "kpiTodayOutbound": "Outbound today",
+    "kpiStockTotal": "Total on hand",
+    "systemPanel": "System status",
+    "systemPanelNote": "Live data from the backend",
+    "colStatus": "Check",
+    "colValue": "Result",
+    "backendVersion": "Backend version",
+    "database": "Database",
+    "schemaTables": "Tables",
+    "roles": "Roles",
+    "loading": "Loading…",
+    "unavailable": "Backend unreachable"
+  },
+  "common": {
+    "networkError": "Network error, please retry",
+    "empty": "No data yet",
+    "emptyNote": "Records appear here once the first document is completed"
+  }
+}
