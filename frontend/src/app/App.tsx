@@ -3,10 +3,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { fetchMeta } from '../shared/api/endpoints'
 import { AuthProvider } from '../shared/auth/AuthContext'
-import { RequireAuth } from '../shared/auth/RequireAuth'
+import { RequireAuth, RequirePermission } from '../shared/auth/RequireAuth'
 import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
+import { SkuListPage } from '../features/masterdata/SkuListPage'
 
 export function AppRoutes() {
   return (
@@ -33,7 +34,14 @@ function AuthenticatedApp() {
     <AppShell version={meta.data?.version}>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/skus" element={<PlaceholderPage navKey="nav.skus" />} />
+        <Route
+          path="/skus"
+          element={
+            <RequirePermission permission="MANAGE_MASTER">
+              <SkuListPage />
+            </RequirePermission>
+          }
+        />
         <Route path="/locations" element={<PlaceholderPage navKey="nav.skus" />} />
         <Route path="/inbound-orders" element={<PlaceholderPage navKey="nav.inbound" />} />
         <Route path="/outbound-orders" element={<PlaceholderPage navKey="nav.outbound" />} />

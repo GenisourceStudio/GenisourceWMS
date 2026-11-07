@@ -47,6 +47,33 @@
   "common": {
     "networkError": "网络异常，请稍后重试",
     "empty": "暂无数据",
-    "emptyNote": "完成第一张单据后这里会显示记录"
+    "emptyNote": "完成第一张单据后这里会显示记录",
+    "loading": "读取中…",
+    "loadFailed": "加载失败",
+    "save": "保存",
+    "saving": "保存中…",
+    "cancel": "取消",
+    "close": "关闭"
+  },
+  "sku": {
+    "search": "搜索",
+    "searchPlaceholder": "按编码或名称搜索",
+    "create": "新建 SKU",
+    "edit": "编辑 SKU",
+    "code": "SKU 编码",
+    "name": "名称",
+    "spec": "规格",
+    "unit": "单位",
+    "colCode": "SKU 编码",
+    "colName": "名称",
+    "colSpec": "规格",
+    "colUnit": "单位",
+    "colStatus": "状态",
+    "active": "启用",
+    "inactive": "停用",
+    "activeLabel": "启用该 SKU",
+    "codeHint": "编码即条码内容，创建后不可修改",
+    "codeLocked": "编码已锁定（即条码内容）",
+    "emptyNote": "点击右上角「新建 SKU」添加第一条商品"
   }
 }

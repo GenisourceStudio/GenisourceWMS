@@ -7,6 +7,8 @@ export interface NavItem {
   index: string
   key: string
   path: string
+  /** Capability required to see this entry; omitted means always visible. */
+  permission?: string
 }
 
 /**
@@ -15,12 +17,12 @@ export interface NavItem {
  */
 export const NAV_ITEMS: NavItem[] = [
   { index: '01', key: 'nav.dashboard', path: '/' },
-  { index: '02', key: 'nav.skus', path: '/skus' },
-  { index: '03', key: 'nav.inbound', path: '/inbound-orders' },
-  { index: '04', key: 'nav.outbound', path: '/outbound-orders' },
-  { index: '05', key: 'nav.inventory', path: '/inventory' },
-  { index: '06', key: 'nav.transactions', path: '/inventory/transactions' },
-  { index: '07', key: 'nav.logs', path: '/operation-logs' },
+  { index: '02', key: 'nav.skus', path: '/skus', permission: 'MANAGE_MASTER' },
+  { index: '03', key: 'nav.inbound', path: '/inbound-orders', permission: 'MANAGE_ORDER' },
+  { index: '04', key: 'nav.outbound', path: '/outbound-orders', permission: 'MANAGE_ORDER' },
+  { index: '05', key: 'nav.inventory', path: '/inventory', permission: 'VIEW_INVENTORY' },
+  { index: '06', key: 'nav.transactions', path: '/inventory/transactions', permission: 'VIEW_INVENTORY' },
+  { index: '07', key: 'nav.logs', path: '/operation-logs', permission: 'VIEW_AUDIT' },
 ]
 
 export function AppShell({ version, children }: { version?: string; children: React.ReactNode }) {
@@ -29,9 +31,15 @@ export function AppShell({ version, children }: { version?: string; children: Re
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
+  // Hide entries the account cannot use: the backend still enforces them, but a
+  // scanner operator should never see console-only navigation.
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.permission || (user?.permissions ?? []).includes(item.permission),
+  )
+
   // Longest matching path wins, so /inventory/transactions does not light up
   // /inventory as well.
-  const current = [...NAV_ITEMS]
+  const current = [...visibleItems]
     .sort((a, b) => b.path.length - a.path.length)
     .find((item) => (item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)))
 
@@ -52,7 +60,7 @@ export function AppShell({ version, children }: { version?: string; children: Re
         </div>
 
         <nav className="shell-nav" aria-label={t('app.name')}>
-          {NAV_ITEMS.map((item) => (
+          {visibleItems.map((item) => (
             <NavLink key={item.path} to={item.path} end={item.path === '/'}>
               <span className="shell-nav-index">{item.index}</span>
               {t(item.key)}

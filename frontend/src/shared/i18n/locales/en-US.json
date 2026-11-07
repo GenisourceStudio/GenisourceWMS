@@ -47,6 +47,33 @@
   "common": {
     "networkError": "Network error, please retry",
     "empty": "No data yet",
-    "emptyNote": "Records appear here once the first document is completed"
+    "emptyNote": "Records appear here once the first document is completed",
+    "loading": "Loading…",
+    "loadFailed": "Failed to load",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "sku": {
+    "search": "Search",
+    "searchPlaceholder": "Search by code or name",
+    "create": "New SKU",
+    "edit": "Edit SKU",
+    "code": "SKU code",
+    "name": "Name",
+    "spec": "Spec",
+    "unit": "Unit",
+    "colCode": "SKU code",
+    "colName": "Name",
+    "colSpec": "Spec",
+    "colUnit": "Unit",
+    "colStatus": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activeLabel": "Active",
+    "codeHint": "The code is the barcode payload and cannot change later",
+    "codeLocked": "Code is locked (barcode payload)",
+    "emptyNote": "Use \"New SKU\" to add the first item"
   }
 }

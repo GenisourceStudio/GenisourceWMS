@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -58,6 +59,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleNotFound(NoResourceFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "NOT_FOUND", "error.not-found");
+    }
+
+    /** Business rule violation carrying its own status and stable code. */
+    @ExceptionHandler(WmsException.class)
+    public ProblemDetail handleWms(WmsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatus());
+        problem.setTitle(ex.getMessage());
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("code", ex.getCode());
+        return problem;
+    }
+
+    /**
+     * Last line of defence for unique constraints: a concurrent create can pass
+     * the pre-check and still collide here. Reported as a conflict, not a 500.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleIntegrity(DataIntegrityViolationException ex) {
+        return problem(HttpStatus.CONFLICT, "CONSTRAINT_VIOLATION", "error.conflict");
     }
 
     private ProblemDetail problem(HttpStatus status, String code, String messageKey) {

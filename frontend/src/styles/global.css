@@ -763,6 +763,170 @@ button {
   }
 }
 
+/* ------------------------------------------------------------------ page head */
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-family: var(--gs-font-display);
+  font-size: var(--gs-text-h1);
+  font-weight: 600;
+  letter-spacing: var(--gs-tracking-tight);
+  color: var(--gs-ink);
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-input-sm {
+  width: 220px;
+  height: 36px;
+}
+
+.field-hint {
+  font-size: var(--gs-text-overline);
+  color: var(--gs-ink-3);
+}
+
+/* A panel that hosts a table directly, without the usual inner padding. */
+.panel-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.cell-code {
+  font-family: var(--gs-font-mono);
+  color: var(--gs-navy-800);
+}
+
+.cell-muted {
+  color: var(--gs-ink-3);
+}
+
+.row-clickable {
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------- drawer */
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0, 30, 66, 0.32);
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: 520px;
+  max-width: 100%;
+  background: var(--gs-canvas);
+  box-shadow: var(--gs-sh-md);
+  animation: drawer-in var(--gs-dur-fast) var(--gs-ease-standard) both;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: var(--gs-hairline) solid var(--gs-line);
+}
+
+.drawer-title {
+  margin: 0;
+  font-family: var(--gs-font-display);
+  font-size: var(--gs-text-h3);
+  font-weight: 600;
+  letter-spacing: var(--gs-tracking-tight);
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--gs-r-control);
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--gs-ink-3);
+}
+
+.drawer-close:hover {
+  background: var(--gs-subtle);
+  color: var(--gs-ink);
+}
+
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: var(--gs-hairline) solid var(--gs-line);
+}
+
+.btn-secondary {
+  background: var(--gs-canvas);
+  border-color: var(--gs-line-strong);
+  color: var(--gs-navy-800);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gs-subtle);
+}
+
+/* Header actions reuse .btn; this makes the small search button match the
+   compact input next to it. */
+.page-actions .btn {
+  height: 36px;
+  padding: 0 14px;
+}
+
+.field-input[readonly] {
+  background: var(--gs-subtle);
+  color: var(--gs-ink-3);
+}
+
 /* ------------------------------------------------------------------ status */
 
 .status {

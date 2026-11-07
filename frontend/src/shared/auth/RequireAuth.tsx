@@ -17,3 +17,21 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>
 }
+
+/**
+ * Route-level capability guard. Complements the backend's @PreAuthorize: typing
+ * a URL by hand should not render a screen the account cannot use.
+ */
+export function RequirePermission({
+  permission,
+  children,
+}: {
+  permission: string
+  children: React.ReactNode
+}) {
+  const { user } = useAuth()
+  if (!user?.permissions.includes(permission)) {
+    return <Navigate to="/" replace />
+  }
+  return <>{children}</>
+}

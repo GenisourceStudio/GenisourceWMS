@@ -66,6 +66,7 @@ docker compose up -d --build   # web 暴露 8100
 
 - **Slice 0（工程骨架）**：前后端可启动、Flyway 建表 16 张、RBAC 种子就绪、首页读取后端真实数据。
 - **Slice 1（登录与鉴权）**：内置管理员由 `AdminBootstrap` 按环境变量创建；`/auth/login`、`/auth/refresh`、`/auth/me`、`/auth/logout` 就绪；JWT HS256（Access 15m / Refresh 7d）；每请求查库重建权限；前端 `AuthProvider` + `RequireAuth`，401 自动刷新，刷新页面保持登录。
+- **Slice 2（基础资料 SKU）**：`/api/v1/skus` 列表/创建/更新就绪，`@PreAuthorize('MANAGE_MASTER')` 守卫；编码不可变（即条码）；停用代替删除；前端列表 + 新建/编辑抽屉，导航按能力过滤，`RequirePermission` 守卫直连 URL。
 - 内置账号：`admin` / `admin123`（**上线前必须改** `WMS_ADMIN_PASSWORD`）。
 
-下一片：基础资料 SKU 增删改查（Slice 2）。
+下一片：库位与往来单位（Slice 3），复用 SKU 的 CRUD 模式。
