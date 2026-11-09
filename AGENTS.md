@@ -64,9 +64,20 @@ docker compose up -d --build   # web 暴露 8100
 
 ## 当前状态
 
-- **Slice 0（工程骨架）**：前后端可启动、Flyway 建表 16 张、RBAC 种子就绪、首页读取后端真实数据。
-- **Slice 1（登录与鉴权）**：内置管理员由 `AdminBootstrap` 按环境变量创建；`/auth/login`、`/auth/refresh`、`/auth/me`、`/auth/logout` 就绪；JWT HS256（Access 15m / Refresh 7d）；每请求查库重建权限；前端 `AuthProvider` + `RequireAuth`，401 自动刷新，刷新页面保持登录。
-- **Slice 2（基础资料 SKU）**：`/api/v1/skus` 列表/创建/更新就绪，`@PreAuthorize('MANAGE_MASTER')` 守卫；编码不可变（即条码）；停用代替删除；前端列表 + 新建/编辑抽屉，导航按能力过滤，`RequirePermission` 守卫直连 URL。
-- 内置账号：`admin` / `admin123`（**上线前必须改** `WMS_ADMIN_PASSWORD`）。
+**Slice 0–8 全部完成，端到端验收通过（`scripts/acceptance.mjs` 24/24，`scripts/check-ledger.mjs` 账实一致）。**
 
-下一片：库位与往来单位（Slice 3），复用 SKU 的 CRUD 模式。
+- Slice 0：工程骨架、Flyway 16 表、设计系统 token。
+- Slice 1：`AdminBootstrap` + JWT（Access 15m / Refresh 7d）、`AuthProvider` / `RequireAuth` / `RequirePermission`。
+- Slice 2：SKU CRUD（编码不可变、停用代替删除、导航按能力过滤）。
+- Slice 3：库位 / 往来单位 CRUD（`MasterCrudPage` 通用组件 + 三页签）。
+- Slice 4：入库单（单号 `RK-YYYYMMDD-####`、行明细、状态派生）。
+- Slice 5：**核心事务**（`InventoryService.recordStockChange` 单入口：库存 + 流水 + JSONB 审计 + 行/单状态同事务）；手机端深蓝工位终端。
+- Slice 6：库存查询 + 流水台账（`InventoryController` 动态原生 SQL）。
+- Slice 7：出库单 + 拣货指引（实时计算）+ 行锁条件更新防负库存。
+- Slice 8：操作日志页（JSONB 明细展开）+ `check-ledger.mjs` / `acceptance.mjs`。
+
+内置账号：`admin` / `admin123`（**上线前必须改** `WMS_ADMIN_PASSWORD`）。
+
+**验收脚本需在空库运行**；日常巡检用 `check-ledger.mjs`。若需重跑全链路，先 `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` 再重启后端让 Flyway 重建。
+
+后续可选（不在 MVP 范围）：盘点、调拨、批次效期、报表看板、ERP 对接、分批收货/短拣、原生摄像头扫码（当前为手输 + 扫码框保底）。

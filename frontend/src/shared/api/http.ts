@@ -4,6 +4,14 @@ const ACCESS_KEY = 'genisource.wms.access'
 const REFRESH_KEY = 'genisource.wms.refresh'
 
 /** RFC 9457 problem detail, plus the WMS-specific `code` extension property. */
+/** Envelope for paged lists — the same shape for every resource. */
+export interface Page<T> {
+  items: T[]
+  total: number
+  page: number
+  size: number
+}
+
 export interface Problem {
   status?: number
   title?: string

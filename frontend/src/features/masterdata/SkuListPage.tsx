@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../shared/api/http'
 import { createSku, fetchSkus, updateSku, type Sku } from '../../shared/api/skus'
 
-export function SkuListPage() {
+export function SkuListPage({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [keyword, setKeyword] = useState('')
@@ -21,9 +21,12 @@ export function SkuListPage() {
 
   return (
     <>
-      <div className="page-head">
-        <h1 className="page-title">{t('nav.skus')}</h1>
-        <div className="page-actions">
+      {!embedded && (
+        <div className="page-head">
+          <h1 className="page-title">{t('nav.skus')}</h1>
+        </div>
+      )}
+      <div className="page-actions page-actions-right">
           <input
             className="field-input field-input-sm"
             placeholder={t('sku.searchPlaceholder')}
@@ -39,7 +42,6 @@ export function SkuListPage() {
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
             {t('sku.create')}
           </button>
-        </div>
       </div>
 
       <section className="panel panel-flush">

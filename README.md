@@ -7,7 +7,7 @@
 ![React](https://img.shields.io/badge/React-19-149eca)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
 
-> **当前状态：v0.1.0-alpha 骨架（Slice 0）。** 工程可启动、数据库迁移就绪、首页读取后端真实数据。业务功能按 [PRD](docs/PRD.md) 的 5 项逐步落地。
+> **当前状态：Slice 0–8 全部完成，端到端验收通过。** 从全新数据库跑通「主数据 → 入库上架 → 库存 → 拣货复核 → 出库」全链路（验收脚本 24/24 通过），`check-ledger.mjs` 校验账实一致。
 
 ## 文档
 
@@ -91,9 +91,27 @@ docs/             PRD、系统设计、设计系统
 | 切片 | 内容 | 状态 |
 | --- | --- | --- |
 | Slice 0 | 工程骨架、数据库迁移、设计系统 token | ✅ |
-| Slice 1 | 登录（JWT）与内置管理员 | ⬜ |
-| Slice 2 | 基础资料：SKU / 库位 / 往来单位 | ⬜ |
-| Slice 3 | 入库单 + 手机扫码上架 | ⬜ |
-| Slice 4 | 库存查询 + 流水台账 | ⬜ |
-| Slice 5 | 出库单 + 扫码复核扣减 | ⬜ |
-| Slice 6 | 操作日志与端到端验收 | ⬜ |
+| Slice 1 | 登录（JWT）与内置管理员 | ✅ |
+| Slice 2 | 基础资料：SKU 增删改查 | ✅ |
+| Slice 3 | 基础资料：库位 / 往来单位 | ✅ |
+| Slice 4 | 入库单创建与列表 | ✅ |
+| Slice 5 | 手机扫码上架（核心写库事务） | ✅ |
+| Slice 6 | 库存查询 + 流水台账 | ✅ |
+| Slice 7 | 出库单 + 扫码复核扣减 | ✅ |
+| Slice 8 | 操作日志页 + 端到端验收脚本 | ✅ |
+
+## 验收
+
+```bash
+# 从全新数据库跑通完整业务链路（24 项断言）
+node scripts/acceptance.mjs
+
+# 账实一致校验：inventory.qty == SUM(inventory_txn.qty_delta)
+node scripts/check-ledger.mjs
+```
+
+`acceptance.mjs` 会创建主数据、单据并执行扫码确认，需在**空库**上运行；`check-ledger.mjs` 可在任意时点作为巡检使用。两者都不依赖额外 npm 包（通过 `docker exec psql` 读库）。
+
+## 已验证的防错规则
+
+错扫 SKU、错库位（含出库非指引库位）、数量不符、重复扫、并发双击、超量出库（不产生负库存）、停用主数据、作业员越权（403）、相同 `clientToken` 幂等重放。

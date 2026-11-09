@@ -1,7 +1,7 @@
 /**
  * SKU master data endpoints (docs/SYSTEM_DESIGN.md §6).
  */
-import { apiGet, apiPost, apiPut } from './http'
+import { apiGet, apiPost, apiPut, type Page } from './http'
 
 export interface Sku {
   id: number
@@ -10,13 +10,6 @@ export interface Sku {
   spec: string | null
   unit: string | null
   isActive: boolean
-}
-
-export interface Page<T> {
-  items: T[]
-  total: number
-  page: number
-  size: number
 }
 
 export interface CreateSkuInput {
