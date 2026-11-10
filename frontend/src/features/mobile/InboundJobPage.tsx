@@ -34,6 +34,10 @@ export function InboundJobPage() {
   const doneCount = lines.filter((l) => l.status === 'DONE').length
   const pending = lines.filter((l) => l.status === 'PENDING')
   const current = pending[0] ?? null
+  // When the order is fully done there is no "current" row, so the counter
+  // must not show doneCount + 1 (it used to render "3 / 2").
+  const progressLine = current ? doneCount + 1 : doneCount
+  const progressPct = lines.length ? (doneCount / lines.length) * 100 : 0
 
   // When the current row changes (after a successful confirm), prefill its
   // expected quantity and put the cursor back in the SKU field.
@@ -107,8 +111,8 @@ export function InboundJobPage() {
       </div>
 
       <div className="mobile-progress">
-        <span className="mono">{t('scan.line')} {doneCount + 1} / {lines.length}</span>
-        <div className="progress-track"><div className="progress-fill" style={{ width: `${(doneCount / lines.length) * 100}%` }} /></div>
+        <span className="mono">{t('scan.line')} {progressLine} / {lines.length}</span>
+        <div className="progress-track"><div className="progress-fill" style={{ width: `${progressPct}%` }} /></div>
       </div>
 
       {current ? (

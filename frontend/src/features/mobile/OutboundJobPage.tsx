@@ -29,6 +29,8 @@ export function OutboundJobPage() {
   const lines = task.data?.lines ?? []
   const doneCount = lines.filter((l) => l.status === 'DONE').length
   const current = lines.find((l) => l.status === 'PENDING') ?? null
+  const progressLine = current ? doneCount + 1 : doneCount
+  const progressPct = lines.length ? (doneCount / lines.length) * 100 : 0
 
   useEffect(() => {
     if (current) {
@@ -90,8 +92,8 @@ export function OutboundJobPage() {
         <span className="mono">{task.data.orderNo}</span>
       </div>
       <div className="mobile-progress">
-        <span className="mono">{t('scan.line')} {doneCount + 1} / {lines.length}</span>
-        <div className="progress-track"><div className="progress-fill" style={{ width: `${(doneCount / lines.length) * 100}%` }} /></div>
+        <span className="mono">{t('scan.line')} {progressLine} / {lines.length}</span>
+        <div className="progress-track"><div className="progress-fill" style={{ width: `${progressPct}%` }} /></div>
       </div>
 
       {current ? (

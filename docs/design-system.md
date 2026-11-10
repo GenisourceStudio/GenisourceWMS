@@ -380,4 +380,20 @@ MES `global.css` 共 6470 行，其中大部分是 MES 专属业务样式（BOM 
 
 ## 11. 预览
 
-工程搭建并完成首屏后补入截图（登录、总览、单据详情、库存流水、手机端扫码作业）。**当前尚无截图**，不引用 MES 的截图以免误导。
+以下截图全部由真实浏览器（Playwright + 系统 Chrome）在 1440×900 / 390×844 下采集，数据来自运行中的 PostgreSQL，非设计稿。
+
+| 登录 | 总览（Hero + 4 格 KPI） | 基础资料（三页签） | 库存查询 |
+| --- | --- | --- | --- |
+| ![登录](screenshots/01-login.png) | ![总览](screenshots/02-dashboard.png) | ![基础资料](screenshots/03-masterdata-sku.png) | ![库存查询](screenshots/09-inventory.png) |
+
+| 库存流水 | 操作日志 | 入库单详情 | 出库单列表 |
+| --- | --- | --- | --- |
+| ![库存流水](screenshots/10-transactions.png) | ![操作日志](screenshots/11-operation-logs.png) | ![入库单详情](screenshots/07-inbound-detail.png) | ![出库单列表](screenshots/08-outbound-orders.png) |
+
+**手机端作业（工位终端范式，390×844）**
+
+| 作业任务列表 | 扫码作业中 | 错扫就近提示 | 本单完成 |
+| --- | --- | --- | --- |
+| ![作业任务](screenshots/12-mobile-tasks.png) | ![扫码作业](screenshots/14-mobile-job-scanning.png) | ![错扫提示](screenshots/15-mobile-job-error.png) | ![本单完成](screenshots/13-mobile-job-done.png) |
+
+采集方式见仓库根 `scripts/`；重新截图需先启动前后端与数据库（端口见 AGENTS.md）。

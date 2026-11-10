@@ -22,3 +22,15 @@ export interface HealthSummary {
 export function fetchHealth(): Promise<HealthSummary> {
   return apiGet<HealthSummary>('/actuator/health')
 }
+
+export interface DashboardSummary {
+  pendingOrders: number
+  todayInbound: number
+  todayOutbound: number
+  stockTotal: number
+}
+
+/** KPI tiles in the dashboard Hero — all four come from real DB queries. */
+export function fetchDashboardSummary(): Promise<DashboardSummary> {
+  return apiGet<DashboardSummary>('/api/v1/dashboard/summary')
+}

@@ -1,21 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { fetchHealth, fetchMeta } from '../shared/api/endpoints'
+import { fetchDashboardSummary, fetchHealth, fetchMeta } from '../shared/api/endpoints'
 import { HeroRipple } from '../shared/ui/BrandMark'
 
 /**
- * Scaffold landing page. Every number here comes from the backend — the point
- * of the first slice is to prove the SPA, the API and PostgreSQL are wired up
- * end to end (docs/SYSTEM_DESIGN.md §11.1 step 1).
+ * Landing page. Every number comes from a real backend query: the four Hero
+ * KPIs from /dashboard/summary, the status panel from /meta and /actuator/health.
  */
 export function DashboardPage() {
   const { t } = useTranslation()
 
   const meta = useQuery({ queryKey: ['meta'], queryFn: fetchMeta })
   const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, refetchInterval: 30_000 })
+  const summary = useQuery({ queryKey: ['dashboard-summary'], queryFn: fetchDashboardSummary })
 
   const online = health.isSuccess && health.data?.status === 'UP'
   const loading = meta.isLoading || health.isLoading
+
+  const kpis = [
+    { label: t('dashboard.kpiPendingOrders'), value: summary.data?.pendingOrders },
+    { label: t('dashboard.kpiTodayInbound'), value: summary.data?.todayInbound },
+    { label: t('dashboard.kpiTodayOutbound'), value: summary.data?.todayOutbound },
+    { label: t('dashboard.kpiStockTotal'), value: summary.data?.stockTotal },
+  ]
 
   return (
     <>
@@ -25,22 +32,12 @@ export function DashboardPage() {
         <p className="hero-lead">{t('dashboard.lead')}</p>
 
         <div className="hero-kpis">
-          <div className="kpi">
-            <div className="kpi-value">—</div>
-            <div className="kpi-label">{t('dashboard.kpiPendingOrders')}</div>
-          </div>
-          <div className="kpi">
-            <div className="kpi-value">—</div>
-            <div className="kpi-label">{t('dashboard.kpiTodayInbound')}</div>
-          </div>
-          <div className="kpi">
-            <div className="kpi-value">—</div>
-            <div className="kpi-label">{t('dashboard.kpiTodayOutbound')}</div>
-          </div>
-          <div className="kpi">
-            <div className="kpi-value">—</div>
-            <div className="kpi-label">{t('dashboard.kpiStockTotal')}</div>
-          </div>
+          {kpis.map((kpi) => (
+            <div className="kpi" key={kpi.label}>
+              <div className="kpi-value">{kpi.value ?? '—'}</div>
+              <div className="kpi-label">{kpi.label}</div>
+            </div>
+          ))}
         </div>
 
         <HeroRipple />
