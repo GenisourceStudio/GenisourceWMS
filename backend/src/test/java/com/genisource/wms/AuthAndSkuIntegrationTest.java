@@ -29,16 +29,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class AuthAndSkuIntegrationTest extends AbstractWebIntegrationTest {
 
-    private static final String[] ADMIN_PERMISSIONS = {
+    // The MVP's six permissions plus MANAGE_USER added by V3 (C2 user admin).
+    // Asserting "contains all" instead of an exact size keeps this test valid as
+    // later migrations grant the admin role more capabilities.
+    private static final String[] REQUIRED_ADMIN_PERMISSIONS = {
         "VIEW_DASHBOARD", "MANAGE_MASTER", "MANAGE_ORDER",
-        "VIEW_INVENTORY", "VIEW_AUDIT", "EXECUTE_TASK"
+        "VIEW_INVENTORY", "VIEW_AUDIT", "EXECUTE_TASK", "MANAGE_USER"
     };
 
     @Autowired
     private SkuRepository skuRepository;
 
     @Test
-    void loginReturnsTokensAndAdminWithSixPermissions() throws Exception {
+    void loginReturnsTokensAndAdminWithAllPermissions() throws Exception {
         MvcResult result = mvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
@@ -49,7 +52,7 @@ class AuthAndSkuIntegrationTest extends AbstractWebIntegrationTest {
                 .andReturn();
 
         List<String> permissions = JsonPath.read(body(result), "$.user.permissions");
-        assertThat(permissions).hasSize(6).containsExactlyInAnyOrder(ADMIN_PERMISSIONS);
+        assertThat(permissions).contains(REQUIRED_ADMIN_PERMISSIONS);
     }
 
     @Test
@@ -78,7 +81,7 @@ class AuthAndSkuIntegrationTest extends AbstractWebIntegrationTest {
                 .andReturn();
 
         List<String> permissions = JsonPath.read(body(result), "$.permissions");
-        assertThat(permissions).hasSize(6).containsExactlyInAnyOrder(ADMIN_PERMISSIONS);
+        assertThat(permissions).contains(REQUIRED_ADMIN_PERMISSIONS);
     }
 
     @Test

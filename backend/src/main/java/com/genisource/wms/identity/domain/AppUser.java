@@ -83,6 +83,30 @@ public class AppUser {
         this.passwordHash = passwordHash;
     }
 
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /** Replaces roles in place so the owning collection reference stays intact. */
+    public void replaceRoles(java.util.Collection<Role> newRoles) {
+        this.roles.clear();
+        this.roles.addAll(newRoles);
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Set<String> roleCodes() {
+        Set<String> codes = new LinkedHashSet<>();
+        roles.forEach(role -> codes.add(role.getCode()));
+        return codes;
+    }
+
     /** Flattens role → permission into the flat code set Spring Security consumes. */
     public Set<String> permissionCodes() {
         Set<String> codes = new LinkedHashSet<>();

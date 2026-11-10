@@ -11,7 +11,8 @@
     "outbound": "Outbound",
     "inventory": "Inventory",
     "transactions": "Stock ledger",
-    "logs": "Audit log"
+    "logs": "Audit log",
+    "users": "Users"
   },
   "login": {
     "kicker": "Warehouse console",
@@ -192,5 +193,21 @@
     "expand": "Expand",
     "collapse": "Collapse",
     "emptyNote": "No operations recorded yet"
+  },
+  "users": {
+    "create": "New user",
+    "edit": "Edit user",
+    "username": "Username",
+    "usernameLocked": "Username cannot change after creation",
+    "displayName": "Display name",
+    "role": "Role",
+    "admin": "Administrator",
+    "operator": "Operator",
+    "actions": "Actions",
+    "changePassword": "Change password",
+    "newPassword": "New password",
+    "passwordChanged": "Password changed — use the new one at next login",
+    "enabledLabel": "Account enabled",
+    "emptyNote": "Use \"New user\" to add an operator"
   }
 }

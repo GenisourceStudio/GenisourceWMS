@@ -2334,3 +2334,23 @@ html[lang^="zh"] :is(
   transform: none !important;
   will-change: auto !important;
 }
+
+/* ------------------------------------------------------------- user admin */
+
+.row-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.drawer-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--gs-r-md);
+  background: var(--gs-jade-50);
+  color: var(--gs-jade-700);
+  font-size: var(--gs-text-body-s);
+}

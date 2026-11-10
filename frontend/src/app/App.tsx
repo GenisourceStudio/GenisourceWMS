@@ -16,6 +16,7 @@ import { InventoryPage } from '../features/inventory/InventoryPage'
 import { OutboundOrderListPage } from '../features/outbound/OutboundOrderListPage'
 import { OutboundOrderDetailPage } from '../features/outbound/OutboundOrderDetailPage'
 import { OperationLogPage } from '../features/admin/OperationLogPage'
+import { UserListPage } from '../features/admin/UserListPage'
 
 export function AppRoutes() {
   return (
@@ -93,6 +94,7 @@ function AuthenticatedApp() {
         <Route path="/inventory" element={<RequirePermission permission="VIEW_INVENTORY"><InventoryPage mode="stock" /></RequirePermission>} />
         <Route path="/inventory/transactions" element={<RequirePermission permission="VIEW_INVENTORY"><InventoryPage mode="ledger" /></RequirePermission>} />
         <Route path="/operation-logs" element={<RequirePermission permission="VIEW_AUDIT"><OperationLogPage /></RequirePermission>} />
+        <Route path="/users" element={<RequirePermission permission="MANAGE_USER"><UserListPage /></RequirePermission>} />
         {/* PRD: no dedicated 404 page. Unknown paths fall back to the dashboard. */}
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

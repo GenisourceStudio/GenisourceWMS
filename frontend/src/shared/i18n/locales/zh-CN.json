@@ -11,7 +11,8 @@
     "outbound": "出库单",
     "inventory": "库存查询",
     "transactions": "库存流水",
-    "logs": "操作日志"
+    "logs": "操作日志",
+    "users": "用户管理"
   },
   "login": {
     "kicker": "仓储控制台",
@@ -192,5 +193,21 @@
     "expand": "展开",
     "collapse": "收起",
     "emptyNote": "还没有操作记录"
+  },
+  "users": {
+    "create": "新建用户",
+    "edit": "编辑用户",
+    "username": "用户名",
+    "usernameLocked": "用户名创建后不可修改",
+    "displayName": "显示名",
+    "role": "角色",
+    "admin": "管理员",
+    "operator": "作业员",
+    "actions": "操作",
+    "changePassword": "修改密码",
+    "newPassword": "新密码",
+    "passwordChanged": "密码已修改，下次登录需用新密码",
+    "enabledLabel": "启用该账号",
+    "emptyNote": "点击「新建用户」添加作业员"
   }
 }
