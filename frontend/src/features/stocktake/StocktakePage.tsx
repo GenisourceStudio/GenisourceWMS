@@ -10,6 +10,7 @@ import {
 } from '../../shared/api/stocktake'
 import { fetchLocations, type Location } from '../../shared/api/locations'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 import { Pagination } from '../../shared/ui/Pagination'
 
 const PAGE_SIZE = 20
@@ -40,12 +41,19 @@ export function StocktakeListPage() {
       <div className="page-head">
         <h1 className="page-title">{t('nav.stocktakes')}</h1>
         <div className="page-actions">
-          <select className="field-input field-input-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0) }}>
-            <option value="">{t('order.allStatus')}</option>
-            <option value="DRAFT">{t('order.draft')}</option>
-            <option value="PARTIAL">{t('order.partial')}</option>
-            <option value="COMPLETED">{t('order.completed')}</option>
-          </select>
+          <div className="filter-select">
+            <Select
+              size="sm"
+              value={status}
+              onChange={(v) => { setStatus(v); setPage(0) }}
+              placeholder={t('order.allStatus')}
+              options={[
+                { value: 'DRAFT', label: t('order.draft') },
+                { value: 'PARTIAL', label: t('order.partial') },
+                { value: 'COMPLETED', label: t('order.completed') },
+              ]}
+            />
+          </div>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
             {t('stocktake.create')}
           </button>
@@ -136,10 +144,14 @@ function CreateStocktakeDrawer({ onClose, onSaved }: { onClose: () => void; onSa
         <form className="drawer-body" onSubmit={(e) => { e.preventDefault(); setError(null); mutation.mutate() }}>
           <label className="field">
             <span className="field-label">{t('order.colLocation')}</span>
-            <select className="field-input" value={locationId} onChange={(e) => setLocationId(e.target.value)} required>
-              <option value="">{t('stocktake.selectLocation')}</option>
-              {locList.map((l) => <option key={l.id} value={l.id}>{l.code}</option>)}
-            </select>
+            <Select
+              value={locationId}
+              onChange={setLocationId}
+              placeholder={t('stocktake.selectLocation')}
+              required
+              mono
+              options={locList.map((l) => ({ value: String(l.id), label: l.code }))}
+            />
           </label>
           <p className="field-hint">{t('stocktake.snapshotHint')}</p>
           <label className="field">

@@ -8,6 +8,7 @@ import {
   type InventoryQuery, type TxnQuery,
 } from '../../shared/api/inventory'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 import { Pagination } from '../../shared/ui/Pagination'
 
 const PAGE_SIZE = 20
@@ -104,11 +105,18 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
               onChange={(e) => setOrderNo(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') applyTxn() }}
             />
-            <select className="field-input field-input-sm" value={type} onChange={(e) => setType(e.target.value)}>
-              <option value="">{t('inventory.allTypes')}</option>
-              <option value="INBOUND">{t('inventory.inbound')}</option>
-              <option value="OUTBOUND">{t('inventory.outbound')}</option>
-            </select>
+            <div className="filter-select">
+              <Select
+                size="sm"
+                value={type}
+                onChange={setType}
+                placeholder={t('inventory.allTypes')}
+                options={[
+                  { value: 'INBOUND', label: t('inventory.inbound') },
+                  { value: 'OUTBOUND', label: t('inventory.outbound') },
+                ]}
+              />
+            </div>
             <input
               className="field-input field-input-sm"
               type="date"

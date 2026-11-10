@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchOperationLogs, type LogQuery } from '../../shared/api/logs'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 import { Pagination } from '../../shared/ui/Pagination'
 
 const PAGE_SIZE = 20
@@ -46,11 +47,18 @@ export function OperationLogPage() {
       </div>
 
       <div className="filter-bar">
-        <select className="field-input field-input-sm" value={action} onChange={(e) => setAction(e.target.value)}>
-          <option value="">{t('logs.allActions')}</option>
-          <option value="STOCK_INBOUND">{t('inventory.inbound')}</option>
-          <option value="STOCK_OUTBOUND">{t('inventory.outbound')}</option>
-        </select>
+        <div className="filter-select">
+          <Select
+            size="sm"
+            value={action}
+            onChange={setAction}
+            placeholder={t('logs.allActions')}
+            options={[
+              { value: 'STOCK_INBOUND', label: t('inventory.inbound') },
+              { value: 'STOCK_OUTBOUND', label: t('inventory.outbound') },
+            ]}
+          />
+        </div>
         <input
           className="field-input field-input-sm"
           placeholder={t('logs.actor')}

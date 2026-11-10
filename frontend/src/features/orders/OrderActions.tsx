@@ -5,6 +5,7 @@ import { ApiError } from '../../shared/api/http'
 import { fetchSkus, type Sku } from '../../shared/api/skus'
 import { updateInboundOrder, deleteInboundOrder } from '../../shared/api/orders'
 import { updateOutboundOrder, deleteOutboundOrder } from '../../shared/api/outbound'
+import { Select } from '../../shared/ui/Select'
 
 export interface EditableLine {
   id: number
@@ -154,15 +155,14 @@ function EditOrderDrawer({
             <span className="field-label">{t('order.lines')}</span>
             {lines.map((line, index) => (
               <div className="order-line-row" key={index}>
-                <select
-                  className="field-input"
+                <Select
                   value={line.skuId}
-                  onChange={(e) => setLines((prev) => prev.map((l, i) => (i === index ? { ...l, skuId: e.target.value } : l)))}
+                  onChange={(v) => setLines((prev) => prev.map((l, i) => (i === index ? { ...l, skuId: v } : l)))}
+                  placeholder={t('order.selectSku')}
                   required
-                >
-                  <option value="">{t('order.selectSku')}</option>
-                  {skuList.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
-                </select>
+                  mono
+                  options={skuList.map((s) => ({ value: String(s.id), label: `${s.code} · ${s.name}` }))}
+                />
                 <input
                   className="field-input num"
                   type="number"

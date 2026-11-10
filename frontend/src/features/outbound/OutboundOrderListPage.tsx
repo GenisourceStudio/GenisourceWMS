@@ -8,6 +8,7 @@ import { fetchOutboundOrders, createOutboundOrder, type OrderStatus } from '../.
 import { fetchPartners, type Partner } from '../../shared/api/partners'
 import { fetchSkus, type Sku } from '../../shared/api/skus'
 import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 import { Pagination } from '../../shared/ui/Pagination'
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
@@ -35,12 +36,19 @@ export function OutboundOrderListPage() {
       <div className="page-head">
         <h1 className="page-title">{t('nav.outbound')}</h1>
         <div className="page-actions">
-          <select className="field-input field-input-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">{t('order.allStatus')}</option>
-            <option value="DRAFT">{t('order.draft')}</option>
-            <option value="PARTIAL">{t('order.partial')}</option>
-            <option value="COMPLETED">{t('order.completed')}</option>
-          </select>
+          <div className="filter-select">
+            <Select
+              size="sm"
+              value={status}
+              onChange={setStatus}
+              placeholder={t('order.allStatus')}
+              options={[
+                { value: 'DRAFT', label: t('order.draft') },
+                { value: 'PARTIAL', label: t('order.partial') },
+                { value: 'COMPLETED', label: t('order.completed') },
+              ]}
+            />
+          </div>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
             <Icon name="plus" size={15} /> {t('order.createOutbound')}
           </button>
@@ -147,10 +155,13 @@ function CreateOutboundDrawer({ onClose, onSaved }: { onClose: () => void; onSav
         <form className="drawer-body" onSubmit={(e) => { e.preventDefault(); setError(null); mutation.mutate() }}>
           <label className="field">
             <span className="field-label">{t('order.customer')}</span>
-            <select className="field-input" value={partnerId} onChange={(e) => setPartnerId(e.target.value)} required>
-              <option value="">{t('order.selectCustomer')}</option>
-              {customers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <Select
+              value={partnerId}
+              onChange={setPartnerId}
+              placeholder={t('order.selectCustomer')}
+              required
+              options={customers.map((p) => ({ value: String(p.id), label: p.name }))}
+            />
           </label>
           <label className="field">
             <span className="field-label">{t('order.remark')}</span>
@@ -160,15 +171,14 @@ function CreateOutboundDrawer({ onClose, onSaved }: { onClose: () => void; onSav
             <span className="field-label">{t('order.lines')}</span>
             {lines.map((line, index) => (
               <div className="order-line-row" key={index}>
-                <select
-                  className="field-input"
+                <Select
                   value={line.skuId}
-                  onChange={(e) => setLines((prev) => prev.map((l, i) => (i === index ? { ...l, skuId: e.target.value } : l)))}
+                  onChange={(v) => setLines((prev) => prev.map((l, i) => (i === index ? { ...l, skuId: v } : l)))}
+                  placeholder={t('order.selectSku')}
                   required
-                >
-                  <option value="">{t('order.selectSku')}</option>
-                  {skuList.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
-                </select>
+                  mono
+                  options={skuList.map((s) => ({ value: String(s.id), label: `${s.code} · ${s.name}` }))}
+                />
                 <input
                   className="field-input num"
                   type="number"

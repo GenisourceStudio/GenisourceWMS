@@ -11,6 +11,7 @@ import {
 import { fetchSkus, type Sku } from '../../shared/api/skus'
 import { fetchLocations, type Location } from '../../shared/api/locations'
 import { TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 import { Pagination } from '../../shared/ui/Pagination'
 
 const PAGE_SIZE = 20
@@ -48,12 +49,19 @@ export function TransferPage() {
       <div className="page-head">
         <h1 className="page-title">{t('nav.transfers')}</h1>
         <div className="page-actions">
-          <select className="field-input field-input-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0) }}>
-            <option value="">{t('order.allStatus')}</option>
-            <option value="DRAFT">{t('order.draft')}</option>
-            <option value="PARTIAL">{t('order.partial')}</option>
-            <option value="COMPLETED">{t('order.completed')}</option>
-          </select>
+          <div className="filter-select">
+            <Select
+              size="sm"
+              value={status}
+              onChange={(v) => { setStatus(v); setPage(0) }}
+              placeholder={t('order.allStatus')}
+              options={[
+                { value: 'DRAFT', label: t('order.draft') },
+                { value: 'PARTIAL', label: t('order.partial') },
+                { value: 'COMPLETED', label: t('order.completed') },
+              ]}
+            />
+          </div>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
             {t('transfer.create')}
           </button>
@@ -177,18 +185,30 @@ function CreateTransferDrawer({ onClose, onSaved }: { onClose: () => void; onSav
             <span className="field-label">{t('transfer.lines')}</span>
             {lines.map((line, index) => (
               <div className="transfer-line-row" key={index}>
-                <select className="field-input" value={line.skuId} onChange={(e) => update(index, 'skuId', e.target.value)} required>
-                  <option value="">{t('order.selectSku')}</option>
-                  {skuList.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
-                </select>
-                <select className="field-input" value={line.fromLocationId} onChange={(e) => update(index, 'fromLocationId', e.target.value)} required>
-                  <option value="">{t('transfer.from')}</option>
-                  {locList.map((l) => <option key={l.id} value={l.id}>{l.code}</option>)}
-                </select>
-                <select className="field-input" value={line.toLocationId} onChange={(e) => update(index, 'toLocationId', e.target.value)} required>
-                  <option value="">{t('transfer.to')}</option>
-                  {locList.map((l) => <option key={l.id} value={l.id}>{l.code}</option>)}
-                </select>
+                <Select
+                  value={line.skuId}
+                  onChange={(v) => update(index, 'skuId', v)}
+                  placeholder={t('order.selectSku')}
+                  required
+                  mono
+                  options={skuList.map((s) => ({ value: String(s.id), label: s.code }))}
+                />
+                <Select
+                  value={line.fromLocationId}
+                  onChange={(v) => update(index, 'fromLocationId', v)}
+                  placeholder={t('transfer.from')}
+                  required
+                  mono
+                  options={locList.map((l) => ({ value: String(l.id), label: l.code }))}
+                />
+                <Select
+                  value={line.toLocationId}
+                  onChange={(v) => update(index, 'toLocationId', v)}
+                  placeholder={t('transfer.to')}
+                  required
+                  mono
+                  options={locList.map((l) => ({ value: String(l.id), label: l.code }))}
+                />
                 <input className="field-input num" type="number" min="1" value={line.qty}
                   onChange={(e) => update(index, 'qty', e.target.value)} required />
                 {lines.length > 1 && (

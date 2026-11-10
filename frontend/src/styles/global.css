@@ -245,14 +245,23 @@ button {
   background: var(--gs-jade-500);
 }
 
+/* Inline row action. Also used on <button>, so the UA's outset bevel, gray
+   face and default padding must be cleared explicitly — otherwise a table of
+   actions renders as raised gray boxes (design-system.md §5.4). */
 .text-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding-bottom: 2px;
+  padding: 0 0 2px;
+  margin: 0;
+  border: 0;
   border-bottom: 1px solid var(--gs-line-strong);
+  border-radius: 0;
+  background: none;
+  appearance: none;
   font-size: var(--gs-text-caption);
   font-weight: 500;
+  line-height: var(--gs-leading-body);
   text-decoration: none;
   color: var(--gs-navy-800);
   transition:
@@ -260,9 +269,16 @@ button {
     border-color var(--gs-dur-instant) var(--gs-ease-standard);
 }
 
-.text-link:hover {
+.text-link:hover:not(:disabled) {
   border-color: var(--gs-jade-600);
   color: var(--gs-jade-700);
+}
+
+/* Disabled actions stay fully readable instead of fading the label away. */
+.text-link:disabled {
+  color: var(--gs-ink-3);
+  border-bottom-color: var(--gs-line);
+  cursor: not-allowed;
 }
 
 /* Visible to assistive tech only. */
@@ -2454,10 +2470,27 @@ html[lang^="zh"] :is(
 
 .transfer-line-row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 70px 36px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "sku sku"
+    "from to"
+    "qty del";
   gap: 8px;
   align-items: center;
+  padding: 12px;
+  border: var(--gs-hairline) solid var(--gs-line);
+  border-radius: var(--gs-r-md);
 }
+
+/* Keep the transfer line readable inside a 520px drawer: SKU spans the row,
+   then source/target side by side, quantity and the remove button last. */
+.transfer-line-row > *:nth-child(1) { grid-area: sku; }
+.transfer-line-row > *:nth-child(2) { grid-area: from; }
+.transfer-line-row > *:nth-child(3) { grid-area: to; }
+.transfer-line-row > *:nth-child(4) { grid-area: qty; }
+/* The remove button only renders when there is more than one line. */
+.transfer-line-row > button:last-child { grid-area: del; justify-self: end; }
+.transfer-line-row > input:last-child { grid-area: qty; }
 
 .stocktake-done {
   display: flex;
@@ -2469,4 +2502,142 @@ html[lang^="zh"] :is(
   background: var(--gs-jade-50);
   color: var(--gs-jade-700);
   font-size: var(--gs-text-body-s);
+}
+
+/* -------------------------------------------------------------- Select */
+
+.select-root {
+  position: relative;
+  width: 100%;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: var(--gs-hairline) solid var(--gs-line-strong);
+  border-radius: var(--gs-r-md);
+  background: var(--gs-canvas);
+  font-size: var(--gs-text-body-s);
+  color: var(--gs-ink);
+  text-align: left;
+  transition:
+    border-color var(--gs-dur-instant) var(--gs-ease-standard),
+    box-shadow var(--gs-dur-instant) var(--gs-ease-standard);
+}
+
+.select-trigger-sm {
+  height: 36px;
+}
+
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--gs-navy-300);
+}
+
+.select-trigger:focus-visible,
+.select-trigger.is-open {
+  outline: none;
+  border-color: var(--gs-jade-500);
+  box-shadow: 0 0 0 2px var(--gs-accent-soft);
+}
+
+.select-trigger:disabled {
+  background: var(--gs-subtle);
+  color: var(--gs-ink-3);
+  cursor: not-allowed;
+}
+
+.select-trigger.is-placeholder .select-value {
+  color: var(--gs-ink-3);
+}
+
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-chevron {
+  flex: 0 0 auto;
+  color: var(--gs-ink-3);
+  transition: transform var(--gs-dur-instant) var(--gs-ease-standard);
+}
+
+.select-trigger.is-open .select-chevron {
+  transform: rotate(180deg);
+}
+
+.select-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 140px;
+  width: max-content;
+  max-width: 320px;
+  max-height: 264px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  border: var(--gs-hairline) solid var(--gs-line);
+  border-radius: var(--gs-r-md);
+  background: var(--gs-canvas);
+  box-shadow: var(--gs-sh-md);
+  animation: select-in var(--gs-dur-fast) var(--gs-ease-standard) both;
+}
+
+@keyframes select-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--gs-r-sm);
+  font-size: var(--gs-text-body-s);
+  color: var(--gs-ink);
+  cursor: pointer;
+}
+
+.select-option.is-active {
+  background: var(--gs-subtle);
+}
+
+.select-option.is-selected {
+  color: var(--gs-navy-800);
+  font-weight: 500;
+}
+
+.select-option.is-disabled {
+  color: var(--gs-ink-3);
+  cursor: not-allowed;
+}
+
+.select-option-check {
+  flex: 0 0 auto;
+  color: var(--gs-jade-600);
+}
+
+.select-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Filter-bar selects keep a fixed compact width like .field-input-sm. */
+.filter-select {
+  width: 170px;
+  flex: 0 0 auto;
 }

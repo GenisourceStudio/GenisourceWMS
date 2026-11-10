@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../shared/api/http'
 import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 
 export interface Column<T> {
   key: string
@@ -196,19 +197,13 @@ function MasterDrawer<T extends { id: number }>({
             <label className="field" key={field.name}>
               <span className="field-label">{field.label}</span>
               {field.type === 'select' ? (
-                <select
-                  className="field-input"
+                <Select
                   value={values[field.name] ?? ''}
-                  onChange={(e) => setValue(field.name, e.target.value)}
+                  onChange={(v) => setValue(field.name, v)}
                   disabled={Boolean(row) && field.immutable}
                   required={field.required}
-                >
-                  {(field.options ?? []).map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  options={(field.options ?? []).map((opt) => ({ value: opt.value, label: opt.label }))}
+                />
               ) : (
                 <input
                   className={field.mono ? 'field-input mono' : 'field-input'}

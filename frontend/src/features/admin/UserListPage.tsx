@@ -7,6 +7,7 @@ import {
   type UserAccount,
 } from '../../shared/api/users'
 import { Icon, EmptyState, TableSkeleton } from '../../shared/ui/Icon'
+import { Select } from '../../shared/ui/Select'
 
 /** C2: create operators, change passwords, disable accounts. */
 export function UserListPage() {
@@ -173,10 +174,14 @@ function UserDrawer({
 
           <label className="field">
             <span className="field-label">{t('users.role')}</span>
-            <select className="field-input" value={roleCode} onChange={(e) => setRoleCode(e.target.value)}>
-              <option value="OPERATOR">{t('users.operator')}</option>
-              <option value="ADMIN">{t('users.admin')}</option>
-            </select>
+            <Select
+              value={roleCode}
+              onChange={setRoleCode}
+              options={[
+                { value: 'OPERATOR', label: t('users.operator') },
+                { value: 'ADMIN', label: t('users.admin') },
+              ]}
+            />
           </label>
 
           {user && (
