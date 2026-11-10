@@ -133,7 +133,11 @@
     "lineDone": "Done",
     "linePending": "Pending",
     "inboundEmptyNote": "Use \"New inbound order\" to create the first document",
-    "outboundEmptyNote": "Use \"New outbound order\" to create the first document"
+    "outboundEmptyNote": "Use \"New outbound order\" to create the first document",
+    "edit": "Edit order",
+    "delete": "Delete draft",
+    "deleteConfirmTitle": "Delete this draft?",
+    "deleteConfirmText": "This cannot be undone. Completed orders cannot be deleted. Order:"
   },
   "scan": {
     "tasks": "Tasks",

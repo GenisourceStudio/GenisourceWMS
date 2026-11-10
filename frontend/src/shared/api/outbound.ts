@@ -1,5 +1,5 @@
 /** Outbound order endpoints. */
-import { apiGet, apiPost, type Page } from './http'
+import { apiDelete, apiGet, apiPost, apiPut, type Page } from './http'
 
 export type OrderStatus = 'DRAFT' | 'PARTIAL' | 'COMPLETED'
 
@@ -64,6 +64,15 @@ export function fetchOutboundOrder(id: number): Promise<OutboundOrder> {
 
 export function createOutboundOrder(input: CreateOutboundInput): Promise<OutboundOrder> {
   return apiPost<OutboundOrder>('/api/v1/outbound-orders', input)
+}
+
+/** Only DRAFT orders can be edited; partner stays immutable on the backend. */
+export function updateOutboundOrder(id: number, input: CreateOutboundInput): Promise<OutboundOrder> {
+  return apiPut<OutboundOrder>(`/api/v1/outbound-orders/${id}`, input)
+}
+
+export function deleteOutboundOrder(id: number): Promise<void> {
+  return apiDelete(`/api/v1/outbound-orders/${id}`)
 }
 
 export function fetchOutboundTask(id: number): Promise<OutboundTask> {

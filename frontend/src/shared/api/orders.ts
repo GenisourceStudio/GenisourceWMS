@@ -1,5 +1,5 @@
 /** Inbound order endpoints. */
-import { apiGet, apiPost, type Page } from './http'
+import { apiDelete, apiGet, apiPost, apiPut, type Page } from './http'
 
 export type OrderStatus = 'DRAFT' | 'PARTIAL' | 'COMPLETED'
 
@@ -44,4 +44,13 @@ export function fetchInboundOrder(id: number): Promise<InboundOrder> {
 
 export function createInboundOrder(input: CreateInboundInput): Promise<InboundOrder> {
   return apiPost<InboundOrder>('/api/v1/inbound-orders', input)
+}
+
+/** Only DRAFT orders can be edited; partner stays immutable on the backend. */
+export function updateInboundOrder(id: number, input: CreateInboundInput): Promise<InboundOrder> {
+  return apiPut<InboundOrder>(`/api/v1/inbound-orders/${id}`, input)
+}
+
+export function deleteInboundOrder(id: number): Promise<void> {
+  return apiDelete(`/api/v1/inbound-orders/${id}`)
 }

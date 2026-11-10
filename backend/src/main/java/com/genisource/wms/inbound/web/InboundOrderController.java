@@ -7,9 +7,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,5 +50,19 @@ public class InboundOrderController {
             @Valid @RequestBody CreateInboundOrderRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         return orderService.create(request, principal == null ? null : principal.id());
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('MANAGE_ORDER')")
+    public InboundOrderResponse update(
+            @PathVariable Long id, @Valid @RequestBody CreateInboundOrderRequest request) {
+        return orderService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('MANAGE_ORDER')")
+    public void delete(@PathVariable Long id) {
+        orderService.delete(id);
     }
 }

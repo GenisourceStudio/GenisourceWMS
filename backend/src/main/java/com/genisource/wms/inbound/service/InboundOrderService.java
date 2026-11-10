@@ -68,25 +68,73 @@ public class InboundOrderService {
 
     @Transactional
     public InboundOrderResponse create(CreateInboundOrderRequest request, Long operatorId) {
-        Partner partner = partnerRepository
-                .findById(request.partnerId())
-                .orElseThrow(() -> WmsException.notFound("供应商不存在：" + request.partnerId()));
+        Partner partner = resolveSupplier(request.partnerId());
+        List<InboundLine> lines = buildLines(request.lines());
 
+        // A draft number only lives inside this transaction; flush assigns the id
+        // that becomes the sequence suffix (SDD §5.5). Must fit VARCHAR(32).
+        InboundOrder order = new InboundOrder(
+                "D" + UUID.randomUUID().toString().replace("-", "").substring(0, 30), partner, request.remark(), operatorId);
+        lines.forEach(order::addLine);
+
+        orderRepository.saveAndFlush(order);
+        order.assignOrderNo("RK");
+        return InboundOrderResponse.from(order);
+    }
+
+    /**
+     * Edits a DRAFT order. Once any line is confirmed the order has produced
+     * ledger rows, so PARTIAL / COMPLETED orders are immutable.
+     */
+    @Transactional
+    public InboundOrderResponse update(Long id, CreateInboundOrderRequest request) {
+        InboundOrder order = orderRepository
+                .findById(id)
+                .orElseThrow(() -> WmsException.notFound("入库单不存在：" + id));
+
+        if (order.getStatus() != InboundOrder.Status.DRAFT) {
+            throw WmsException.conflict("ORDER_NOT_EDITABLE", "只有草稿单据可编辑");
+        }
+
+        // The supplier is immutable on an existing document: it was already
+        // issued against a specific partner. Only remark and lines may change.
+        List<InboundLine> lines = buildLines(request.lines());
+
+        order.replaceLines(lines);
+        order.setRemark(request.remark());
+        return InboundOrderResponse.from(order);
+    }
+
+    /** Deletes a DRAFT order and its lines; cascade handles the children. */
+    @Transactional
+    public void delete(Long id) {
+        InboundOrder order = orderRepository
+                .findById(id)
+                .orElseThrow(() -> WmsException.notFound("入库单不存在：" + id));
+
+        if (order.getStatus() != InboundOrder.Status.DRAFT) {
+            throw WmsException.conflict("ORDER_NOT_DELETABLE", "只有草稿单据可删除");
+        }
+        orderRepository.delete(order);
+    }
+
+    private Partner resolveSupplier(Long partnerId) {
+        Partner partner = partnerRepository
+                .findById(partnerId)
+                .orElseThrow(() -> WmsException.notFound("供应商不存在：" + partnerId));
         if (partner.getType() != Partner.Type.SUPPLIER) {
             throw WmsException.conflict("PARTNER_TYPE_MISMATCH", "入库单必须关联供应商");
         }
         if (!partner.isActive()) {
             throw WmsException.conflict("MASTER_DATA_INACTIVE", "供应商已停用");
         }
+        return partner;
+    }
 
-        // A draft number only lives inside this transaction; flush assigns the id
-        // that becomes the sequence suffix (SDD §5.5). Must fit VARCHAR(32).
-        InboundOrder order = new InboundOrder(
-                "D" + UUID.randomUUID().toString().replace("-", "").substring(0, 30), partner, request.remark(), operatorId);
-
+    private List<InboundLine> buildLines(List<CreateInboundOrderRequest.Line> requested) {
         Set<Long> seenSkus = new HashSet<>();
-        List<CreateInboundOrderRequest.Line> lines = new ArrayList<>(request.lines());
-        for (CreateInboundOrderRequest.Line line : lines) {
+        List<InboundLine> lines = new ArrayList<>();
+        for (CreateInboundOrderRequest.Line line : requested) {
             if (!seenSkus.add(line.skuId())) {
                 throw WmsException.conflict("DUPLICATE_LINE_SKU", "同一 SKU 不能在单据中出现多次");
             }
@@ -96,11 +144,8 @@ public class InboundOrderService {
             if (!sku.isActive()) {
                 throw WmsException.conflict("MASTER_DATA_INACTIVE", "SKU 已停用：" + sku.getCode());
             }
-            order.addLine(new InboundLine(sku, line.expectedQty()));
+            lines.add(new InboundLine(sku, line.expectedQty()));
         }
-
-        orderRepository.saveAndFlush(order);
-        order.assignOrderNo("RK");
-        return InboundOrderResponse.from(order);
+        return lines;
     }
 }

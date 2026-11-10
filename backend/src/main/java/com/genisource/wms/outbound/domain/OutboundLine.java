@@ -86,6 +86,11 @@ public class OutboundLine {
 
     public boolean isDone() { return status == Status.DONE; }
 
+    /** Only legal while the parent order is DRAFT (no confirmation yet). */
+    public void updateExpectedQty(int qty) {
+        this.expectedQty = qty;
+    }
+
     public Long getId() { return id; }
     public Sku getSku() { return sku; }
     public int getExpectedQty() { return expectedQty; }

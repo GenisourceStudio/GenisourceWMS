@@ -87,6 +87,40 @@ public class InboundOrder {
     }
 
     /**
+     * Reconciles lines by SKU instead of clear()+add: with
+     * {@code uk_inbound_line_sku (order_id, sku_id)}, deleting and re-inserting
+     * the same SKU in one flush would violate the unique constraint. Existing
+     * lines are updated in place; only genuinely new/removed SKUs are added or
+     * removed.
+     */
+    public void replaceLines(List<InboundLine> newLines) {
+        java.util.Map<Long, InboundLine> bySku = new java.util.HashMap<>();
+        for (InboundLine line : lines) {
+            bySku.put(line.getSku().getId(), line);
+        }
+        java.util.Set<Long> targetSkus = new java.util.HashSet<>();
+        for (InboundLine line : newLines) {
+            targetSkus.add(line.getSku().getId());
+        }
+
+        lines.removeIf(line -> !targetSkus.contains(line.getSku().getId()));
+        for (InboundLine requested : newLines) {
+            InboundLine existing = bySku.get(requested.getSku().getId());
+            if (existing != null) {
+                existing.updateExpectedQty(requested.getExpectedQty());
+            } else {
+                addLine(requested);
+            }
+        }
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    /**
      * Status is derived from line progress — never set by hand (SDD §5.1).
      * Called inside the same transaction as a line confirmation.
      */

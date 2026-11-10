@@ -92,6 +92,11 @@ public class InboundLine {
         return status == Status.DONE;
     }
 
+    /** Only legal while the parent order is DRAFT (no confirmation yet). */
+    public void updateExpectedQty(int qty) {
+        this.expectedQty = qty;
+    }
+
     public Long getId() {
         return id;
     }

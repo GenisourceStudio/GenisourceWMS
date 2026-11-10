@@ -133,7 +133,11 @@
     "lineDone": "已完成",
     "linePending": "待作业",
     "inboundEmptyNote": "点击「新建入库单」创建第一张单据",
-    "outboundEmptyNote": "点击「新建出库单」创建第一张单据"
+    "outboundEmptyNote": "点击「新建出库单」创建第一张单据",
+    "edit": "编辑单据",
+    "delete": "删除草稿",
+    "deleteConfirmTitle": "删除这张草稿单？",
+    "deleteConfirmText": "删除后不可恢复，已完成的单据不能删除。单号："
   },
   "scan": {
     "tasks": "作业任务",

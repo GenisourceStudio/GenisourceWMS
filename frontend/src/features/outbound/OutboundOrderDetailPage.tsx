@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchOutboundOrder, type OrderStatus } from '../../shared/api/outbound'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { OrderActions } from '../orders/OrderActions'
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
   DRAFT: 'status-draft',
@@ -16,6 +17,8 @@ export function OutboundOrderDetailPage() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const orderId = Number(id)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const order = useQuery({
     queryKey: ['outbound-order', orderId],
@@ -47,6 +50,21 @@ export function OutboundOrderDetailPage() {
         <h1 className="page-title mono">{data.orderNo}</h1>
         <span className={`status ${STATUS_CLASS[data.status]}`}>{t(`order.${data.status.toLowerCase()}`)}</span>
       </div>
+
+      {data.status === 'DRAFT' && (
+        <OrderActions
+          kind="outbound"
+          order={data}
+          onChanged={async () => {
+            await queryClient.invalidateQueries({ queryKey: ['outbound-order', orderId] })
+            await queryClient.invalidateQueries({ queryKey: ['outbound-orders'] })
+          }}
+          onDeleted={() => {
+            void queryClient.invalidateQueries({ queryKey: ['outbound-orders'] })
+            navigate('/outbound-orders', { replace: true })
+          }}
+        />
+      )}
 
       <section className="panel">
         <div className="detail-meta">

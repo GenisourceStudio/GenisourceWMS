@@ -84,6 +84,38 @@ public class OutboundOrder {
         line.attachTo(this);
     }
 
+    /**
+     * Reconciles lines by SKU instead of clear()+add (see InboundOrder): the
+     * {@code (order_id, sku_id)} unique constraint would otherwise be violated
+     * by a delete+insert of the same SKU within one flush.
+     */
+    public void replaceLines(List<OutboundLine> newLines) {
+        java.util.Map<Long, OutboundLine> bySku = new java.util.HashMap<>();
+        for (OutboundLine line : lines) {
+            bySku.put(line.getSku().getId(), line);
+        }
+        java.util.Set<Long> targetSkus = new java.util.HashSet<>();
+        for (OutboundLine line : newLines) {
+            targetSkus.add(line.getSku().getId());
+        }
+
+        lines.removeIf(line -> !targetSkus.contains(line.getSku().getId()));
+        for (OutboundLine requested : newLines) {
+            OutboundLine existing = bySku.get(requested.getSku().getId());
+            if (existing != null) {
+                existing.updateExpectedQty(requested.getExpectedQty());
+            } else {
+                addLine(requested);
+            }
+        }
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public void recomputeStatus() {
         boolean anyDone = lines.stream().anyMatch(OutboundLine::isDone);
         boolean allDone = !lines.isEmpty() && lines.stream().allMatch(OutboundLine::isDone);

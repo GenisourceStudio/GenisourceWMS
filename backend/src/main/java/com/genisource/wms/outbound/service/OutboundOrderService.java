@@ -12,6 +12,7 @@ import com.genisource.wms.outbound.domain.OutboundOrder;
 import com.genisource.wms.outbound.repository.OutboundOrderRepository;
 import com.genisource.wms.outbound.web.CreateOutboundOrderRequest;
 import com.genisource.wms.outbound.web.OutboundOrderResponse;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -71,23 +72,67 @@ public class OutboundOrderService {
 
     @Transactional
     public OutboundOrderResponse create(CreateOutboundOrderRequest request, Long operatorId) {
-        Partner partner = partnerRepository
-                .findById(request.partnerId())
-                .orElseThrow(() -> WmsException.notFound("客户不存在：" + request.partnerId()));
+        Partner partner = resolveCustomer(request.partnerId());
+        List<OutboundLine> lines = buildLines(request.lines());
 
+        OutboundOrder order = new OutboundOrder(
+                "D" + UUID.randomUUID().toString().replace("-", "").substring(0, 30),
+                partner, request.remark(), operatorId);
+        lines.forEach(order::addLine);
+
+        orderRepository.saveAndFlush(order);
+        order.assignOrderNo();
+        return OutboundOrderResponse.from(order);
+    }
+
+    /** Edits a DRAFT order only; orders with confirmed lines are immutable. */
+    @Transactional
+    public OutboundOrderResponse update(Long id, CreateOutboundOrderRequest request) {
+        OutboundOrder order = orderRepository
+                .findById(id)
+                .orElseThrow(() -> WmsException.notFound("出库单不存在：" + id));
+
+        if (order.getStatus() != OutboundOrder.Status.DRAFT) {
+            throw WmsException.conflict("ORDER_NOT_EDITABLE", "只有草稿单据可编辑");
+        }
+
+        // Customer is immutable on an existing document.
+        List<OutboundLine> lines = buildLines(request.lines());
+        order.replaceLines(lines);
+        order.setRemark(request.remark());
+        return OutboundOrderResponse.from(order);
+    }
+
+    /** Deletes a DRAFT order; cascade removes its lines. */
+    @Transactional
+    public void delete(Long id) {
+        OutboundOrder order = orderRepository
+                .findById(id)
+                .orElseThrow(() -> WmsException.notFound("出库单不存在：" + id));
+
+        if (order.getStatus() != OutboundOrder.Status.DRAFT) {
+            throw WmsException.conflict("ORDER_NOT_DELETABLE", "只有草稿单据可删除");
+        }
+        orderRepository.delete(order);
+    }
+
+    private Partner resolveCustomer(Long partnerId) {
+        Partner partner = partnerRepository
+                .findById(partnerId)
+                .orElseThrow(() -> WmsException.notFound("客户不存在：" + partnerId));
         if (partner.getType() != Partner.Type.CUSTOMER) {
             throw WmsException.conflict("PARTNER_TYPE_MISMATCH", "出库单必须关联客户");
         }
         if (!partner.isActive()) {
             throw WmsException.conflict("MASTER_DATA_INACTIVE", "客户已停用");
         }
+        return partner;
+    }
 
-        OutboundOrder order = new OutboundOrder(
-                "D" + UUID.randomUUID().toString().replace("-", "").substring(0, 30),
-                partner, request.remark(), operatorId);
-
+    private List<OutboundLine> buildLines(List<CreateOutboundOrderRequest.Line> requested) {
         Set<Long> seenSkus = new HashSet<>();
-        for (CreateOutboundOrderRequest.Line line : request.lines()) {
+        List<OutboundLine> lines = new ArrayList<>();
+        for (CreateOutboundOrderRequest.Line line : requested) {
             if (!seenSkus.add(line.skuId())) {
                 throw WmsException.conflict("DUPLICATE_LINE_SKU", "同一 SKU 不能在单据中出现多次");
             }
@@ -109,11 +154,8 @@ public class OutboundOrderService {
                         sku.getCode() + " 库存不足：可用 " + available + "，需要 " + line.expectedQty());
             }
 
-            order.addLine(new OutboundLine(sku, line.expectedQty()));
+            lines.add(new OutboundLine(sku, line.expectedQty()));
         }
-
-        orderRepository.saveAndFlush(order);
-        order.assignOrderNo();
-        return OutboundOrderResponse.from(order);
+        return lines;
     }
 }

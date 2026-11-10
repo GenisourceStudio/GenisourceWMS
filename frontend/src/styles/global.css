@@ -1224,6 +1224,54 @@ button {
   border-top: var(--gs-hairline) solid var(--gs-line);
 }
 
+/* ------------------------------------------------------------ order actions */
+
+.detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 0 0 16px;
+}
+
+.detail-action-error {
+  margin: 0 0 16px;
+}
+
+.btn-danger {
+  background: var(--gs-canvas);
+  border-color: var(--gs-danger);
+  color: var(--gs-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--gs-danger-soft);
+}
+
+.confirm-dialog {
+  width: 420px;
+  max-width: calc(100% - 32px);
+  margin: auto;
+  padding: 24px;
+  border-radius: var(--gs-r-lg);
+  background: var(--gs-canvas);
+  box-shadow: var(--gs-sh-md);
+}
+
+.confirm-text {
+  margin: 16px 0 24px;
+  font-size: var(--gs-text-body-s);
+  line-height: 1.7;
+  color: var(--gs-ink-2);
+}
+
 /* ------------------------------------------------------- order create / detail */
 
 .order-line-row {
@@ -1246,14 +1294,6 @@ button {
   padding: 0;
   font-size: 18px;
   line-height: 1;
-}
-
-.detail-head {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
 }
 
 .detail-meta {
@@ -2276,3 +2316,21 @@ html[lang^="zh"] :is(
   color: var(--gs-ink-3);
 }
 
+
+/* ---------------------------------------------------------- overlay stacking
+   `.page > *` runs the `rise` animation (which contains a transform) on every
+   direct child. A transform on an overlay — or on any ancestor of it — makes
+   `position: fixed` resolve against that ancestor instead of the viewport, so
+   drawers / scan overlays would be clipped into the page content box.
+   Exclude all viewport-level overlays from that animation and any transform.
+   The inner `.drawer` keeps its own `drawer-in` slide animation. */
+.page > .drawer-backdrop,
+.page .drawer-backdrop,
+.page > .scan-overlay,
+.page .scan-overlay,
+.drawer-backdrop,
+.scan-overlay {
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
