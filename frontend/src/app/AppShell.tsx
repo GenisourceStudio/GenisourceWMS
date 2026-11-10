@@ -29,6 +29,8 @@ export const NAV_ITEMS: NavItem[] = [
   { index: '06', key: 'nav.transactions', path: '/inventory/transactions', icon: 'ledger', permission: 'VIEW_INVENTORY' },
   { index: '07', key: 'nav.logs', path: '/operation-logs', icon: 'history', permission: 'VIEW_AUDIT' },
   { index: '08', key: 'nav.users', path: '/users', icon: 'user', permission: 'MANAGE_USER' },
+  { index: '09', key: 'nav.stocktakes', path: '/stocktakes', icon: 'layers', permission: 'MANAGE_ORDER' },
+  { index: '10', key: 'nav.transfers', path: '/transfers', icon: 'outbound', permission: 'MANAGE_ORDER' },
 ]
 
 export function AppShell({ version, children }: { version?: string; children: React.ReactNode }) {

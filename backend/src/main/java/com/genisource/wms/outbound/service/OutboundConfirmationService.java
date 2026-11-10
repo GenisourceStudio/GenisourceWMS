@@ -1,5 +1,6 @@
 package com.genisource.wms.outbound.service;
 
+import com.genisource.wms.batch.service.BatchService;
 import com.genisource.wms.common.web.WmsException;
 import com.genisource.wms.identity.security.JwtAuthenticationConverter.UserPrincipal;
 import com.genisource.wms.inventory.domain.Inventory;
@@ -27,16 +28,19 @@ public class OutboundConfirmationService {
     private final LocationRepository locationRepository;
     private final InventoryRepository inventoryRepository;
     private final InventoryService inventoryService;
+    private final BatchService batchService;
 
     public OutboundConfirmationService(
             OutboundOrderRepository orderRepository,
             LocationRepository locationRepository,
             InventoryRepository inventoryRepository,
-            InventoryService inventoryService) {
+            InventoryService inventoryService,
+            BatchService batchService) {
         this.orderRepository = orderRepository;
         this.locationRepository = locationRepository;
         this.inventoryRepository = inventoryRepository;
         this.inventoryService = inventoryService;
+        this.batchService = batchService;
     }
 
     /**
@@ -65,8 +69,20 @@ public class OutboundConfirmationService {
                 order.getStatus().name(), lines);
     }
 
-    /** Greedy allocation by location code, taking only as much as needed. */
+    /**
+     * FEFO pick suggestions from live batch stock. Falls back to the legacy
+     * aggregate allocation for SKUs that have never been batch-tracked.
+     */
     private List<PickLocation> pickLocations(Long skuId, int required) {
+        List<BatchService.BatchPick> batchPicks = batchService.pick(skuId, required);
+        if (!batchPicks.isEmpty()) {
+            return batchPicks.stream()
+                    .map(p -> new PickLocation(
+                            p.locationCode(), p.qty(), p.batchId(), p.batchNo(), p.expiryDate()))
+                    .toList();
+        }
+
+        // Legacy aggregate-only path (no batches registered for this SKU).
         List<Inventory> stock = inventoryRepository.findAll().stream()
                 .filter(i -> i.getSkuId().equals(skuId) && i.getQty() > 0)
                 .sorted(Comparator.comparing(Inventory::getLocationId))
@@ -129,12 +145,19 @@ public class OutboundConfirmationService {
             throw WmsException.conflict("QTY_MISMATCH", "数量不符，应为 " + line.getExpectedQty());
         }
 
-        // The scanned location must be one of the live pick suggestions.
-        boolean validPick = pickLocations(line.getSku().getId(), line.getExpectedQty()).stream()
-                .anyMatch(p -> p.locationCode().equalsIgnoreCase(location.getCode()));
-        if (!validPick) {
+        // The scanned location must be one of the live pick suggestions. When
+        // batch tracking is active, FEFO may suggest several batches at this
+        // location; each is decremented in the same transaction.
+        List<PickLocation> picks = pickLocations(line.getSku().getId(), line.getExpectedQty());
+        List<PickLocation> matched = picks.stream()
+                .filter(p -> p.locationCode().equalsIgnoreCase(location.getCode()))
+                .filter(p -> request.batchNo() == null || request.batchNo().isBlank()
+                        || p.batchNo() == null
+                        || p.batchNo().equalsIgnoreCase(request.batchNo().trim()))
+                .toList();
+        if (matched.isEmpty()) {
             throw WmsException.conflict("LOCATION_INVALID",
-                    "库位不在拣货指引中，请刷新任务");
+                    "库位或批次不在拣货指引中，请刷新任务");
         }
 
         Long operatorId = principal == null ? null : principal.id();
@@ -143,25 +166,39 @@ public class OutboundConfirmationService {
             throw WmsException.conflict("LINE_ALREADY_CONFIRMED", "该行已被其他作业确认");
         }
 
-        // Negative delta triggers PESSIMISTIC_WRITE lock + sufficiency check
-        // inside InventoryService. Any failure rolls back the whole transaction.
-        int qtyAfter = inventoryService.recordStockChange(
-                "OUTBOUND",
-                line.getSku().getId(),
-                location.getId(),
-                -request.qty(),
-                "OUTBOUND",
-                order.getId(),
-                order.getOrderNo(),
-                line.getId(),
-                operatorId,
-                operatorName,
-                ip,
-                Map.of(
-                        "scannedSku", request.skuCode(),
-                        "scannedLocation", request.locationCode(),
-                        "lineId", lineId,
-                        "clientToken", String.valueOf(request.clientToken())));
+        // One ledger row per batch taken (FEFO order), all inside this single
+        // transaction. Any failure rolls back every decrement and the line state.
+        int remaining = request.qty();
+        int qtyAfter = 0;
+        for (PickLocation pick : matched) {
+            if (remaining <= 0) break;
+            int take = Math.min(pick.available(), remaining);
+            qtyAfter = inventoryService.recordStockChange(
+                    "OUTBOUND",
+                    line.getSku().getId(),
+                    location.getId(),
+                    -take,
+                    "OUTBOUND",
+                    order.getId(),
+                    order.getOrderNo(),
+                    line.getId(),
+                    operatorId,
+                    operatorName,
+                    ip,
+                    Map.of(
+                            "scannedSku", request.skuCode(),
+                            "scannedLocation", request.locationCode(),
+                            "batchNo", String.valueOf(pick.batchNo()),
+                            "take", take,
+                            "lineId", lineId,
+                            "clientToken", String.valueOf(request.clientToken())),
+                    pick.batchId());
+            remaining -= take;
+        }
+        if (remaining > 0) {
+            throw WmsException.conflict("INSUFFICIENT_BATCH_STOCK",
+                    "该库位批次库存不足，请刷新任务");
+        }
 
         order.recomputeStatus();
 

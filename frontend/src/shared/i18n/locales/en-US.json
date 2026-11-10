@@ -12,7 +12,9 @@
     "inventory": "Inventory",
     "transactions": "Stock ledger",
     "logs": "Audit log",
-    "users": "Users"
+    "users": "Users",
+    "stocktakes": "Stocktakes",
+    "transfers": "Transfers"
   },
   "login": {
     "kicker": "Warehouse console",
@@ -176,7 +178,10 @@
     "cameraUnavailable": "Camera unavailable",
     "cameraFallbackHint": "Enter the code manually — everything still works",
     "language": "Language",
-    "refreshTask": "Refresh task"
+    "refreshTask": "Refresh task",
+    "batchNo": "Batch no.",
+    "expiryDate": "Expiry",
+    "batchOptional": "Batch & expiry are optional — leave blank to skip batch tracking"
   },
   "inventory": {
     "searchPlaceholder": "Search by SKU or location",
@@ -230,5 +235,26 @@
     "rows": "rows",
     "prev": "Prev",
     "next": "Next"
+  },
+  "transfer": {
+    "create": "New transfer",
+    "lines": "Transfer lines",
+    "from": "From location",
+    "to": "To location",
+    "detail": "Detail",
+    "confirm": "Confirm",
+    "emptyNote": "Use \"New transfer\" to create the first transfer"
+  },
+  "stocktake": {
+    "create": "New stocktake",
+    "lines": "Count lines",
+    "expected": "Expected",
+    "actual": "Counted",
+    "detail": "Detail",
+    "emptyNote": "Use \"New stocktake\" to snapshot a location",
+    "selectLocation": "Select location",
+    "snapshotHint": "Creating a stocktake snapshots the location current stock",
+    "confirmLine": "Submit count",
+    "allDone": "All lines counted"
   }
 }

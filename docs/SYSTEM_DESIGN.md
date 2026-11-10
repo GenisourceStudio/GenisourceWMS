@@ -562,7 +562,7 @@ flowchart LR
 3. ~~**是否启用 `demo` profile 预置演示数据**~~ → **决定不引入**：验收数据由 `scripts/acceptance.mjs` 在空库生成，`scripts/check-ledger.mjs` 做一致性巡检。
 4. ~~**VPS 规格 / 域名 / TLS 证书 / 备份落地位置**~~ → **Docker Compose 全栈已实跑通过**（8100 三服务 healthy）；公网部署的域名/TLS/备份仍待定。（注：摄像头需 HTTPS，公网部署必须配证书。）
 5. ~~PRD 状态仍为「待确认」~~ → **已解除**：PRD 已于 2026-11-07 定稿，2026-11-10 扩展范围（盘点 / 调拨 / 批次效期 FIFO）。若后续变更 PRD 决策，§10 追溯矩阵与 §11 验收方案需同步改。
-6. **扩展范围的数据模型**——Flyway `V3__extended_features.sql` 与 `(sku, location, batch)` 库存粒度，随 A 类实现定稿。
+6. ~~**扩展范围的数据模型**~~ → **已实现**：Flyway `V3__user_management.sql`（MANAGE_USER）与 `V4__extended_features.sql`；库存保持 `inventory(sku, location)` 聚合真值不变，新增 `inventory_batch(sku, location, batch)` 明细真值，两者在同一事务内同步（由 `BatchService` 经 `InventoryService` 调用），因此账实一致脚本无需改语义（仅放宽为「一行可有多条流水」）。
 
 ## 14. 变更记录
 | 版本 | 日期 | 说明 | 依据 |

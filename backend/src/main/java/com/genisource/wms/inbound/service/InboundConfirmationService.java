@@ -1,5 +1,7 @@
 package com.genisource.wms.inbound.service;
 
+import com.genisource.wms.batch.domain.SkuBatch;
+import com.genisource.wms.batch.service.BatchService;
 import com.genisource.wms.common.web.WmsException;
 import com.genisource.wms.identity.security.JwtAuthenticationConverter.UserPrincipal;
 import com.genisource.wms.inbound.domain.InboundLine;
@@ -27,16 +29,19 @@ public class InboundConfirmationService {
     private final LocationRepository locationRepository;
     private final InventoryService inventoryService;
     private final InventoryTxnRepository txnRepository;
+    private final BatchService batchService;
 
     public InboundConfirmationService(
             InboundOrderRepository orderRepository,
             LocationRepository locationRepository,
             InventoryService inventoryService,
-            InventoryTxnRepository txnRepository) {
+            InventoryTxnRepository txnRepository,
+            BatchService batchService) {
         this.orderRepository = orderRepository;
         this.locationRepository = locationRepository;
         this.inventoryService = inventoryService;
         this.txnRepository = txnRepository;
+        this.batchService = batchService;
     }
 
     @Transactional
@@ -99,6 +104,17 @@ public class InboundConfirmationService {
             throw WmsException.conflict("LINE_ALREADY_CONFIRMED", "该行已被其他作业确认");
         }
 
+        // --- Optional batch registration (V4). Omitting batchNo keeps the
+        // aggregate-only path, so every pre-V4 order still confirms unchanged.
+        Long batchId = null;
+        if (request.batchNo() != null && !request.batchNo().isBlank()) {
+            java.time.LocalDate expiry = (request.expiryDate() == null || request.expiryDate().isBlank())
+                    ? null : java.time.LocalDate.parse(request.expiryDate().trim());
+            SkuBatch batch = batchService.resolveOrCreate(
+                    line.getSku().getId(), request.batchNo(), expiry);
+            batchId = batch.getId();
+        }
+
         // --- The only stock write. Same transaction as everything else.
         int qtyAfter = inventoryService.recordStockChange(
                 "INBOUND",
@@ -116,7 +132,9 @@ public class InboundConfirmationService {
                         "scannedSku", request.skuCode(),
                         "scannedLocation", request.locationCode(),
                         "lineId", lineId,
-                        "clientToken", String.valueOf(request.clientToken())));
+                        "batchNo", String.valueOf(request.batchNo()),
+                        "clientToken", String.valueOf(request.clientToken())),
+                batchId);
 
         // --- Status is derived from line progress, never set by hand.
         order.recomputeStatus();

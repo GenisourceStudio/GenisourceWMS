@@ -16,7 +16,14 @@ export function fetchInboundTask(id: number): Promise<InboundOrder> {
 export function confirmInboundLine(
   id: number,
   lineId: number,
-  input: { skuCode: string; locationCode: string; qty: number; clientToken: string },
+  input: {
+    skuCode: string
+    locationCode: string
+    qty: number
+    clientToken: string
+    batchNo?: string
+    expiryDate?: string
+  },
 ): Promise<ConfirmResult> {
   return apiPost<ConfirmResult>(`/api/v1/inbound-orders/${id}/lines/${lineId}/confirm`, input)
 }

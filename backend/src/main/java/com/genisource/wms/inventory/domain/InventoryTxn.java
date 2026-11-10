@@ -50,6 +50,10 @@ public class InventoryTxn {
     @Column(name = "line_id", nullable = false)
     private Long lineId;
 
+    /** Null for legacy movements that predate batch tracking (V4). */
+    @Column(name = "batch_id")
+    private Long batchId;
+
     @Column(name = "operator_id")
     private Long operatorId;
 
@@ -61,6 +65,14 @@ public class InventoryTxn {
     public InventoryTxn(
             String type, Long skuId, Long locationId, int qtyDelta, int qtyAfter,
             String orderType, Long orderId, String orderNo, Long lineId, Long operatorId, String remark) {
+        this(type, skuId, locationId, qtyDelta, qtyAfter, orderType, orderId, orderNo,
+                lineId, null, operatorId, remark);
+    }
+
+    public InventoryTxn(
+            String type, Long skuId, Long locationId, int qtyDelta, int qtyAfter,
+            String orderType, Long orderId, String orderNo, Long lineId, Long batchId,
+            Long operatorId, String remark) {
         this.occurredAt = OffsetDateTime.now();
         this.type = type;
         this.skuId = skuId;
@@ -71,6 +83,7 @@ public class InventoryTxn {
         this.orderId = orderId;
         this.orderNo = orderNo;
         this.lineId = lineId;
+        this.batchId = batchId;
         this.operatorId = operatorId;
         this.remark = remark;
     }

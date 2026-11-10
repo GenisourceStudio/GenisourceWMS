@@ -157,7 +157,9 @@ export function OutboundJobPage() {
             {current.pickLocations.length > 0 && (
               <div className="scan-picks mono">
                 <Icon name="layers" size={14} />
-                {t('scan.pickHint')}: {current.pickLocations.map((p) => `${p.locationCode} (${p.available})`).join(' · ')}
+                {t('scan.pickHint')}: {current.pickLocations.map((p) =>
+                  `${p.locationCode}${p.batchNo ? `/${p.batchNo}` : ''}${p.expiryDate ? ` 效期${p.expiryDate}` : ''} (${p.available})`
+                ).join(' · ')}
               </div>
             )}
           </div>

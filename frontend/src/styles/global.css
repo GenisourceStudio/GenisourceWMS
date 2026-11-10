@@ -2435,3 +2435,38 @@ html[lang^="zh"] :is(
   color: #d9fff2;
   font-size: var(--gs-text-body-l);
 }
+
+.scan-batch-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.scan-batch-row .scan-field {
+  font-size: var(--gs-text-body-s);
+}
+
+.scan-batch-hint {
+  margin-top: -8px;
+  font-size: var(--gs-text-overline);
+  color: #7d93ae;
+}
+
+.transfer-line-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 70px 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.stocktake-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--gs-r-md);
+  background: var(--gs-jade-50);
+  color: var(--gs-jade-700);
+  font-size: var(--gs-text-body-s);
+}

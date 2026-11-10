@@ -7,7 +7,7 @@
 ![React](https://img.shields.io/badge/React-19-149eca)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
 
-> **当前状态：Slice 0–8 全部完成，端到端验收通过。** 从全新数据库跑通「主数据 → 入库上架 → 库存 → 拣货复核 → 出库」全链路（验收脚本 24/24 通过），`check-ledger.mjs` 校验账实一致。
+> **当前状态：全部完成。** 基础验收 24/24、扩展验收 30/30、`check-ledger.mjs` 账实一致、后端 `mvn test` 23/23。含批次/FEFO、盘点、调拨、用户管理、分页与组合筛选。
 
 ## 文档
 
@@ -99,6 +99,9 @@ docs/             PRD、系统设计、设计系统
 | Slice 6 | 库存查询 + 流水台账 | ✅ |
 | Slice 7 | 出库单 + 扫码复核扣减 | ✅ |
 | Slice 8 | 操作日志页 + 端到端验收脚本 | ✅ |
+| B 类 | 摄像头扫码 / 语言切换 / 自动化测试 / Docker 全栈 | ✅ |
+| C 类 | 单据编辑删除 / 用户管理 / 分页筛选 / 待办预警 / 刷新引导 | ✅ |
+| A 类 | 盘点单 / 库位调拨 / 批次效期 + FEFO | ✅ |
 
 ## 验收
 
@@ -108,6 +111,9 @@ node scripts/acceptance.mjs
 
 # 账实一致校验：inventory.qty == SUM(inventory_txn.qty_delta)
 node scripts/check-ledger.mjs
+
+# 扩展能力验收（批次/FEFO、盘点、调拨、用户管理、筛选分页、单据编辑）
+node scripts/acceptance-extended.mjs
 ```
 
 `acceptance.mjs` 会创建主数据、单据并执行扫码确认，需在**空库**上运行；`check-ledger.mjs` 可在任意时点作为巡检使用。两者都不依赖额外 npm 包（通过 `docker exec psql` 读库）。

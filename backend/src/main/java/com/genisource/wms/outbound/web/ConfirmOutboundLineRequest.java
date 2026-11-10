@@ -7,5 +7,7 @@ public record ConfirmOutboundLineRequest(
         @NotBlank String skuCode,
         @NotBlank String locationCode,
         @Min(1) int qty,
-        String clientToken) {
+        String clientToken,
+        /** Optional: must match the FEFO suggestion for the scanned location. */
+        String batchNo) {
 }

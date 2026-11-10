@@ -76,31 +76,48 @@ for (const [skuId, locationId, qtyAfter] of afterRows) {
   }
 }
 
-// --- 3. every confirmed line has exactly one ledger row --------------------
+// --- 3. every confirmed line has >=1 ledger row, and the sum matches --------
+// Since V4 a single line may produce several rows (one per batch under FEFO),
+// so "exactly one" no longer holds. The signed sum must still equal the line's
+// confirmed quantity (positive for inbound, negative for outbound).
 const lineRows = sql(`
-  SELECT 'INBOUND', id FROM inbound_line WHERE status = 'DONE'
+  SELECT 'INBOUND', id, confirmed_qty FROM inbound_line WHERE status = 'DONE'
   UNION ALL
-  SELECT 'OUTBOUND', id FROM outbound_line WHERE status = 'DONE'
+  SELECT 'OUTBOUND', id, confirmed_qty FROM outbound_line WHERE status = 'DONE'
 `)
-const txnRows = sql(`SELECT order_type, line_id, COUNT(*) FROM inventory_txn GROUP BY order_type, line_id`)
+const txnRows = sql(`SELECT order_type, line_id, COUNT(*), SUM(qty_delta) FROM inventory_txn GROUP BY order_type, line_id`)
 const txnCount = new Map(txnRows.map(([type, lineId, count]) => [`${type}:${lineId}`, Number(count)]))
-for (const [type, lineId] of lineRows) {
-  const count = txnCount.get(`${type}:${lineId}`) ?? 0
-  if (count !== 1) {
-    fail(`已完成行 ${type}#${lineId} 应有 1 条流水，实际 ${count} 条`)
+const txnSum = new Map(txnRows.map(([type, lineId, , sum]) => [`${type}:${lineId}`, Number(sum)]))
+for (const [type, lineId, confirmedQty] of lineRows) {
+  const key = `${type}:${lineId}`
+  const count = txnCount.get(key) ?? 0
+  const sum = txnSum.get(key) ?? 0
+  const expected = type === 'INBOUND' ? Number(confirmedQty) : -Number(confirmedQty)
+  if (count < 1) {
+    fail(`已完成行 ${type}#${lineId} 没有流水`)
+    ok = false
+  }
+  if (sum !== expected) {
+    fail(`已完成行 ${type}#${lineId} 流水合计 ${sum} 与应记账 ${expected} 不符`)
     ok = false
   }
 }
 console.log(`检查 ${lineRows.length} 条已完成单据行…`)
 
 // --- 4. no orphan ledger rows ------------------------------------------------
+// Only INBOUND / OUTBOUND rows reference order lines. STOCKTAKE / TRANSFER
+// rows reference their own tables (V4).
 const orphans = sql(`
   SELECT t.order_type, t.line_id
   FROM inventory_txn t
   LEFT JOIN inbound_line il ON t.order_type = 'INBOUND' AND il.id = t.line_id
   LEFT JOIN outbound_line ol ON t.order_type = 'OUTBOUND' AND ol.id = t.line_id
+  LEFT JOIN stocktake_line sl ON t.order_type = 'STOCKTAKE' AND sl.id = t.line_id
+  LEFT JOIN transfer_line tl ON t.order_type = 'TRANSFER' AND tl.id = t.line_id
   WHERE (t.order_type = 'INBOUND' AND il.id IS NULL)
      OR (t.order_type = 'OUTBOUND' AND ol.id IS NULL)
+     OR (t.order_type = 'STOCKTAKE' AND sl.id IS NULL)
+     OR (t.order_type = 'TRANSFER' AND tl.id IS NULL)
 `)
 if (orphans.length > 0) {
   fail(`发现 ${orphans.length} 条孤儿流水（对应行不存在）：${orphans.map((r) => r.join('#')).join(', ')}`)

@@ -1,4 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
+import { fetchTransfer } from '../shared/api/transfer'
+import { TableSkeleton, EmptyState } from '../shared/ui/Icon'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { fetchMeta } from '../shared/api/endpoints'
@@ -17,6 +20,8 @@ import { OutboundOrderListPage } from '../features/outbound/OutboundOrderListPag
 import { OutboundOrderDetailPage } from '../features/outbound/OutboundOrderDetailPage'
 import { OperationLogPage } from '../features/admin/OperationLogPage'
 import { UserListPage } from '../features/admin/UserListPage'
+import { TransferPage, TransferDetailPage } from '../features/transfer/TransferPage'
+import { StocktakeListPage, StocktakeDetailPage } from '../features/stocktake/StocktakePage'
 
 export function AppRoutes() {
   return (
@@ -95,10 +100,31 @@ function AuthenticatedApp() {
         <Route path="/inventory/transactions" element={<RequirePermission permission="VIEW_INVENTORY"><InventoryPage mode="ledger" /></RequirePermission>} />
         <Route path="/operation-logs" element={<RequirePermission permission="VIEW_AUDIT"><OperationLogPage /></RequirePermission>} />
         <Route path="/users" element={<RequirePermission permission="MANAGE_USER"><UserListPage /></RequirePermission>} />
+        <Route path="/stocktakes" element={<RequirePermission permission="MANAGE_ORDER"><StocktakeListPage /></RequirePermission>} />
+        <Route path="/stocktakes/:id" element={<RequirePermission permission="MANAGE_ORDER"><StocktakeDetailPage /></RequirePermission>} />
+        <Route path="/transfers" element={<RequirePermission permission="MANAGE_ORDER"><TransferPage /></RequirePermission>} />
+        <Route path="/transfers/:id" element={<RequirePermission permission="MANAGE_ORDER"><TransferDetailRoute /></RequirePermission>} />
         {/* PRD: no dedicated 404 page. Unknown paths fall back to the dashboard. */}
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
   )
+}
+
+
+/** Loads a transfer order by id for the detail route. */
+function TransferDetailRoute() {
+  const { id } = useParams<{ id: string }>()
+  const orderId = Number(id)
+  const q = useQuery({
+    queryKey: ['transfer', orderId],
+    queryFn: () => fetchTransfer(orderId),
+    enabled: Number.isFinite(orderId),
+  })
+  if (q.isLoading) return <TableSkeleton cols={5} rows={4} />
+  if (q.isError || !q.data) {
+    return <EmptyState tone="error" icon="alert" title="Load failed" note={q.error instanceof Error ? q.error.message : ''} />
+  }
+  return <TransferDetailPage order={q.data} />
 }

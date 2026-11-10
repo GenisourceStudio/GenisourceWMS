@@ -64,21 +64,22 @@ docker compose up -d --build   # web 暴露 8100
 
 ## 当前状态
 
-**Slice 0–8 全部完成，端到端验收通过（`scripts/acceptance.mjs` 24/24，`scripts/check-ledger.mjs` 账实一致）；B 类欠账已补齐；PRD 于 2026-11-10 扩展范围（盘点 / 调拨 / 批次效期 FIFO）。**
+**Slice 0–8 + B/C/A 扩展全部完成，端到端验收通过：基础验收 24/24、扩展验收 30/30、`check-ledger.mjs` 账实一致、后端 `mvn test` 23/23。**
 
-**B 类欠账（已完成）**
-- 原生摄像头扫码：`BarcodeScanner` 三级回退（BarcodeDetector → 动态 `@zxing/browser` → 手输保底），作业页 SKU/库位输入框旁触发按钮。
-- 语言切换：`LanguageToggle`，登录页 + 顶栏，`<html lang>` 同步且 localStorage 持久化。
-- 自动化测试：`backend/src/test/` 6 个类、`mvn test` **19/19 通过**，@Transactional 回滚零污染。
-- Docker Compose 全栈：8100 三服务 healthy（`SERVER_PORT=8080`、web healthcheck、代理 unset 修复），访问 http://localhost:8100/。
-- 修复业务 bug：单行单据确认后即 COMPLETED，幂等重放曾被 `ORDER_COMPLETED` 抢先拦截；守卫移到重放分支之后（入库/出库两处 + 回归测试）。
+**A 类（PRD 2026-11-10 扩展范围）**
+- Flyway `V3__user_management.sql`（MANAGE_USER 权限）、`V4__extended_features.sql`（批次/盘点/调拨 6 张表 + 流水 type 扩展 ADJUST/TRANSFER_*）。
+- 批次/FEFO：`sku_batch` + `inventory_batch` 明细真值，与 `inventory` 聚合同事务同步（`BatchService` 由 `InventoryService` 调用）；入库可选登记批次，出库拣货按效期升序（FEFO），一次确认可跨多批次逐条扣减。
+- 盘点单 `/api/v1/stocktakes`（PD-单号，按库位快照，盘盈盘亏走 ADJUST 流水）、调拨 `/api/v1/transfers`（DB-单号，同事务一减一增，净库存不变）。
+- 前端新增导航 09 盘点单 / 10 库位调拨，及手机端入库批次输入、出库 FEFO 批次提示。
 
-**C 类打磨（部分落地）**：图标系统 `Icon.tsx`、震动反馈 `haptics.ts`、顶栏实时时钟/面包屑/头像、Enter 链式聚焦、扫码实时匹配提示、总览 KPI 真实数据。仍待：单据编辑/作废、用户管理界面、分页与组合筛选、库存预警、409 刷新引导。
+**C 类（MVP 打磨）**
+- 单据编辑/删除（仅 DRAFT）、用户管理界面（建作业员/改密/禁用，含防呆守卫）、分页（通用 `Pagination`）、组合筛选（流水日期/类型/库位、日志操作人/日期、库存低库存）、总览待办与库存预警面板、手机端 409 刷新引导。
 
-**A 类（PRD 已确认范围，待实现）**：盘点单、库位调拨、批次/效期 + FIFO/FEFO 拣货；需 Flyway `V3__extended_features.sql`，库存粒度细化到 `(sku, location, batch)`，仍只走 `InventoryService.recordStockChange` 单入口。
+**B 类（欠账补齐）**
+- 摄像头扫码三级回退、语言切换、自动化测试（23 项）、Docker Compose 全栈实跑（8100 三服务 healthy）。
 
 内置账号：`admin` / `admin123`（**上线前必须改** `WMS_ADMIN_PASSWORD`）。
 
-**验收脚本需在空库运行**；日常巡检用 `check-ledger.mjs`。若需重跑全链路，先 `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` 再重启后端让 Flyway 重建。
+**验收**：`node scripts/acceptance.mjs`（基础 24 项）、`node scripts/acceptance-extended.mjs`（扩展 30 项）、`node scripts/check-ledger.mjs`（账实一致）。三者均需在空库运行——先 `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` 再重启后端让 Flyway 重建（V1–V4）。
 
 后续可选（不在范围）：CSV 导入导出、报表看板、ERP 对接、退货换标、多仓/3PL/计费、冻结库存、原生 App。

@@ -36,6 +36,8 @@ export function InboundJobPage() {
   const [sku, setSku] = useState('')
   const [location, setLocation] = useState('')
   const [qty, setQty] = useState('')
+  const [batchNo, setBatchNo] = useState('')
+  const [expiryDate, setExpiryDate] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [needsRefresh, setNeedsRefresh] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -65,6 +67,8 @@ export function InboundJobPage() {
   useEffect(() => {
     if (current) {
       setQty(String(current.expectedQty))
+      setBatchNo('')
+      setExpiryDate('')
       setSku('')
       setLocation('')
       setError(null)
@@ -91,6 +95,8 @@ export function InboundJobPage() {
         locationCode: location.trim(),
         qty: Number(qty),
         clientToken: tokens[current.id] ?? crypto.randomUUID(),
+        batchNo: batchNo.trim() || undefined,
+        expiryDate: expiryDate || undefined,
       })
       haptic([30, 40, 30])
       setTokens((prev) => {
@@ -228,6 +234,24 @@ export function InboundJobPage() {
             }}
             aria-label={t('scan.qty')}
           />
+
+          <div className="scan-batch-row">
+            <input
+              className="scan-box scan-field"
+              placeholder={t('scan.batchNo')}
+              value={batchNo}
+              onChange={(e) => setBatchNo(e.target.value)}
+              aria-label={t('scan.batchNo')}
+            />
+            <input
+              className="scan-box scan-field"
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              aria-label={t('scan.expiryDate')}
+            />
+          </div>
+          <div className="scan-batch-hint">{t('scan.batchOptional')}</div>
 
           {error && (
             <p className="scan-error" role="alert">

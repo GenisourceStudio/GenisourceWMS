@@ -30,6 +30,9 @@ export interface OutboundOrder {
 export interface PickLocation {
   locationCode: string
   available: number
+  batchId: number | null
+  batchNo: string | null
+  expiryDate: string | null
 }
 
 export interface OutboundTask {
@@ -85,7 +88,7 @@ export function fetchOutboundTask(id: number): Promise<OutboundTask> {
 export function confirmOutboundLine(
   id: number,
   lineId: number,
-  input: { skuCode: string; locationCode: string; qty: number; clientToken: string },
+  input: { skuCode: string; locationCode: string; qty: number; clientToken: string; batchNo?: string },
 ): Promise<{ lineId: number; lineStatus: string; qtyAfter: number; orderStatus: string }> {
   return apiPost(`/api/v1/outbound-orders/${id}/lines/${lineId}/confirm`, input)
 }

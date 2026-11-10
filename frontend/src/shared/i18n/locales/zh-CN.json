@@ -12,7 +12,9 @@
     "inventory": "库存查询",
     "transactions": "库存流水",
     "logs": "操作日志",
-    "users": "用户管理"
+    "users": "用户管理",
+    "stocktakes": "盘点单",
+    "transfers": "库位调拨"
   },
   "login": {
     "kicker": "仓储控制台",
@@ -176,7 +178,10 @@
     "cameraUnavailable": "无法访问摄像头",
     "cameraFallbackHint": "可直接手输编码，功能不受影响",
     "language": "语言",
-    "refreshTask": "刷新任务"
+    "refreshTask": "刷新任务",
+    "batchNo": "批次号",
+    "expiryDate": "效期",
+    "batchOptional": "批次与效期可选，留空则不登记批次"
   },
   "inventory": {
     "searchPlaceholder": "按 SKU 或库位搜索",
@@ -230,5 +235,26 @@
     "rows": "条",
     "prev": "上一页",
     "next": "下一页"
+  },
+  "transfer": {
+    "create": "新建调拨单",
+    "lines": "调拨行",
+    "from": "源库位",
+    "to": "目标库位",
+    "detail": "详情",
+    "confirm": "确认调拨",
+    "emptyNote": "点击「新建调拨单」创建第一张调拨单"
+  },
+  "stocktake": {
+    "create": "新建盘点单",
+    "lines": "盘点行",
+    "expected": "账面数量",
+    "actual": "实盘数量",
+    "detail": "盘点",
+    "emptyNote": "点击「新建盘点单」，按库位生成盘点任务",
+    "selectLocation": "选择盘点库位",
+    "snapshotHint": "建单会按该库位当前库存生成盘点行",
+    "confirmLine": "提交实盘",
+    "allDone": "全部盘点完成"
   }
 }

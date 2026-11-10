@@ -1,5 +1,6 @@
 package com.genisource.wms.inventory.service;
 
+import com.genisource.wms.batch.service.BatchService;
 import com.genisource.wms.common.audit.OperationLog;
 import com.genisource.wms.common.audit.OperationLogRepository;
 import com.genisource.wms.common.web.WmsException;
@@ -26,14 +27,30 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final InventoryTxnRepository txnRepository;
     private final OperationLogRepository logRepository;
+    private final BatchService batchService;
 
     public InventoryService(
             InventoryRepository inventoryRepository,
             InventoryTxnRepository txnRepository,
-            OperationLogRepository logRepository) {
+            OperationLogRepository logRepository,
+            BatchService batchService) {
         this.inventoryRepository = inventoryRepository;
         this.txnRepository = txnRepository;
         this.logRepository = logRepository;
+        this.batchService = batchService;
+    }
+
+    /**
+     * Legacy signature kept so all pre-V4 callers stay unchanged. Delegates to
+     * the batch-aware overload with a null batch.
+     */
+    public int recordStockChange(
+            String type, Long skuId, Long locationId, int delta,
+            String orderType, Long orderId, String orderNo, Long lineId,
+            Long operatorId, String operatorName, String ip,
+            Map<String, Object> auditDetail) {
+        return recordStockChange(type, skuId, locationId, delta, orderType, orderId,
+                orderNo, lineId, operatorId, operatorName, ip, auditDetail, null);
     }
 
     /**
@@ -52,7 +69,8 @@ public class InventoryService {
             Long operatorId,
             String operatorName,
             String ip,
-            Map<String, Object> auditDetail) {
+            Map<String, Object> auditDetail,
+            Long batchId) {
 
         Optional<Inventory> locked = delta < 0
                 ? inventoryRepository.lockBySkuAndLocation(skuId, locationId)
@@ -68,9 +86,15 @@ public class InventoryService {
         int qtyAfter = inventory.getQty();
         inventoryRepository.save(inventory);
 
+        // Batch-level truth is updated in the SAME transaction as the aggregate,
+        // so the two can never drift. Legacy movements (batchId == null) skip it.
+        if (batchId != null) {
+            batchService.applyDelta(skuId, locationId, batchId, delta);
+        }
+
         txnRepository.save(new InventoryTxn(
                 type, skuId, locationId, delta, qtyAfter,
-                orderType, orderId, orderNo, lineId, operatorId, null));
+                orderType, orderId, orderNo, lineId, batchId, operatorId, null));
 
         Map<String, Object> detail = new LinkedHashMap<>();
         if (auditDetail != null) {
