@@ -8,6 +8,7 @@ import { fetchOutboundOrders, createOutboundOrder, type OrderStatus } from '../.
 import { fetchPartners, type Partner } from '../../shared/api/partners'
 import { fetchSkus, type Sku } from '../../shared/api/skus'
 import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
+import { Pagination } from '../../shared/ui/Pagination'
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
   DRAFT: 'status-draft',
@@ -15,15 +16,18 @@ const STATUS_CLASS: Record<OrderStatus, string> = {
   COMPLETED: 'status-done',
 }
 
+const PAGE_SIZE = 20
+
 export function OutboundOrderListPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [status, setStatus] = useState('')
   const [creating, setCreating] = useState(false)
+  const [page, setPage] = useState(0)
 
   const orders = useQuery({
-    queryKey: ['outbound-orders', status],
-    queryFn: () => fetchOutboundOrders(status || undefined),
+    queryKey: ['outbound-orders', status, page],
+    queryFn: () => fetchOutboundOrders(status || undefined, page, PAGE_SIZE),
   })
 
   return (
@@ -92,6 +96,10 @@ export function OutboundOrderListPage() {
           <EmptyState title={t('common.empty')} note={t('order.outboundEmptyNote')} />
         )}
       </section>
+
+      {orders.data && (
+        <Pagination page={page} size={PAGE_SIZE} total={orders.data.total} onChange={setPage} />
+      )}
 
       {creating && (
         <CreateOutboundDrawer

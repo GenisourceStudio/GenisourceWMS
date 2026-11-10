@@ -24,24 +24,60 @@ export interface InventoryTxnItem {
   operatorName: string
 }
 
-export function fetchInventory(keyword?: string, skuId?: number, locationId?: number): Promise<Page<InventoryItem>> {
-  const params = new URLSearchParams()
-  if (keyword?.trim()) params.set('keyword', keyword.trim())
-  if (skuId != null) params.set('skuId', String(skuId))
-  if (locationId != null) params.set('locationId', String(locationId))
-  const query = params.toString() ? `?${params}` : ''
-  return apiGet<Page<InventoryItem>>(`/api/v1/inventory${query}`)
+export interface InventoryQuery {
+  keyword?: string
+  skuId?: number
+  locationId?: number
+  lowStockOnly?: boolean
+  threshold?: number
+  page?: number
+  size?: number
 }
 
-export function fetchTransactions(filters?: {
+export interface TxnQuery {
   orderNo?: string
   skuId?: number
+  /** Kept as a string because it comes straight from the filter input. */
+  locationId?: string | number
   type?: string
-}): Promise<Page<InventoryTxnItem>> {
-  const params = new URLSearchParams()
-  if (filters?.orderNo?.trim()) params.set('orderNo', filters.orderNo.trim())
-  if (filters?.skuId != null) params.set('skuId', String(filters.skuId))
-  if (filters?.type) params.set('type', filters.type)
-  const query = params.toString() ? `?${params}` : ''
-  return apiGet<Page<InventoryTxnItem>>(`/api/v1/inventory/transactions${query}`)
+  from?: string
+  to?: string
+  page?: number
+  size?: number
+}
+
+function queryString(params: Record<string, string | number | boolean | undefined>): string {
+  const q = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '' && value !== false) {
+      q.set(key, String(value))
+    }
+  }
+  const s = q.toString()
+  return s ? `?${s}` : ''
+}
+
+export function fetchInventory(query: InventoryQuery = {}): Promise<Page<InventoryItem>> {
+  return apiGet<Page<InventoryItem>>(`/api/v1/inventory${queryString({
+    keyword: query.keyword?.trim() || undefined,
+    skuId: query.skuId,
+    locationId: query.locationId,
+    lowStockOnly: query.lowStockOnly,
+    threshold: query.threshold,
+    page: query.page,
+    size: query.size,
+  })}`)
+}
+
+export function fetchTransactions(query: TxnQuery = {}): Promise<Page<InventoryTxnItem>> {
+  return apiGet<Page<InventoryTxnItem>>(`/api/v1/inventory/transactions${queryString({
+    orderNo: query.orderNo?.trim() || undefined,
+    skuId: query.skuId,
+    locationId: query.locationId,
+    type: query.type,
+    from: query.from,
+    to: query.to,
+    page: query.page,
+    size: query.size,
+  })}`)
 }

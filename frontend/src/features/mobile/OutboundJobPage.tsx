@@ -33,6 +33,7 @@ export function OutboundJobPage() {
   const [location, setLocation] = useState('')
   const [qty, setQty] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [needsRefresh, setNeedsRefresh] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [tokens, setTokens] = useState<Record<number, string>>({})
   const [scanTarget, setScanTarget] = useState<ScanTarget | null>(null)
@@ -66,6 +67,7 @@ export function OutboundJobPage() {
   async function handleConfirm() {
     if (!current || submitting) return
     setError(null)
+    setNeedsRefresh(false)
     setSubmitting(true)
     try {
       await confirmOutboundLine(orderId, current.id, {
@@ -85,6 +87,12 @@ export function OutboundJobPage() {
     } catch (err) {
       haptic(80)
       setError(err instanceof ApiError ? err.message : t('common.networkError'))
+      // A stale pick hint / changed stock can be recovered by refreshing the
+      // task instead of leaving the operator stuck on the same error.
+      if (err instanceof ApiError &&
+          ['LOCATION_INVALID', 'INSUFFICIENT_STOCK', 'ORDER_COMPLETED'].includes(err.code ?? '')) {
+        setNeedsRefresh(true)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -215,6 +223,19 @@ export function OutboundJobPage() {
               <Icon name="alert" size={16} />
               {error}
             </p>
+          )}
+          {needsRefresh && (
+            <button
+              type="button"
+              className="scan-btn scan-refresh"
+              onClick={() => {
+                setNeedsRefresh(false)
+                setError(null)
+                void task.refetch()
+              }}
+            >
+              <Icon name="refresh" size={18} /> {t('scan.refreshTask')}
+            </button>
           )}
 
           <div className="scan-actions">

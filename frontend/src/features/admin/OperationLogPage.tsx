@@ -3,30 +3,69 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
-import { fetchOperationLogs } from '../../shared/api/logs'
+import { fetchOperationLogs, type LogQuery } from '../../shared/api/logs'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Pagination } from '../../shared/ui/Pagination'
+
+const PAGE_SIZE = 20
 
 export function OperationLogPage() {
   const { t } = useTranslation()
   const [action, setAction] = useState('')
+  const [actor, setActor] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [query, setQuery] = useState<LogQuery>({})
+  const [page, setPage] = useState(0)
   const [expanded, setExpanded] = useState<number | null>(null)
 
   const logs = useQuery({
-    queryKey: ['operation-logs', action],
-    queryFn: () => fetchOperationLogs(action || undefined),
+    queryKey: ['operation-logs', query, page],
+    queryFn: () => fetchOperationLogs({ ...query, page, size: PAGE_SIZE }),
   })
+
+  function apply() {
+    setPage(0)
+    setQuery({
+      action: action || undefined,
+      actor: actor.trim() || undefined,
+      from: from || undefined,
+      to: to || undefined,
+    })
+  }
+
+  function reset() {
+    setPage(0)
+    setAction(''); setActor(''); setFrom(''); setTo(''); setQuery({})
+  }
 
   return (
     <>
       <div className="page-head">
         <h1 className="page-title">{t('nav.logs')}</h1>
-        <div className="page-actions">
-          <select className="field-input field-input-sm" value={action} onChange={(e) => setAction(e.target.value)}>
-            <option value="">{t('logs.allActions')}</option>
-            <option value="STOCK_INBOUND">{t('inventory.inbound')}</option>
-            <option value="STOCK_OUTBOUND">{t('inventory.outbound')}</option>
-          </select>
-        </div>
+      </div>
+
+      <div className="filter-bar">
+        <select className="field-input field-input-sm" value={action} onChange={(e) => setAction(e.target.value)}>
+          <option value="">{t('logs.allActions')}</option>
+          <option value="STOCK_INBOUND">{t('inventory.inbound')}</option>
+          <option value="STOCK_OUTBOUND">{t('inventory.outbound')}</option>
+        </select>
+        <input
+          className="field-input field-input-sm"
+          placeholder={t('logs.actor')}
+          value={actor}
+          onChange={(e) => setActor(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') apply() }}
+        />
+        <input className="field-input field-input-sm" type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label={t('inventory.from')} />
+        <input className="field-input field-input-sm" type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label={t('inventory.to')} />
+        <button type="button" className="btn btn-secondary" onClick={apply}>
+          <Icon name="search" size={15} /> {t('sku.search')}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={reset}>
+          <Icon name="refresh" size={15} /> {t('inventory.reset')}
+        </button>
       </div>
 
       <section className="panel panel-flush">
@@ -79,6 +118,10 @@ export function OperationLogPage() {
           <EmptyState title={t('common.empty')} note={t('logs.emptyNote')} />
         )}
       </section>
+
+      {logs.data && (
+        <Pagination page={page} size={PAGE_SIZE} total={logs.data.total} onChange={setPage} />
+      )}
     </>
   )
 }

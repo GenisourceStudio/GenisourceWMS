@@ -38,6 +38,8 @@ public class InventoryController {
             @RequestParam(required = false) Long skuId,
             @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean lowStockOnly,
+            @RequestParam(defaultValue = "5") int threshold,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -69,6 +71,7 @@ public class InventoryController {
                         number(t.get(5)).intValue(),
                         toOffsetDateTime(t.get(6))))
                 .filter(i -> matchesKeyword(keyword, i.skuCode(), i.skuName(), i.locationCode()))
+                .filter(i -> !lowStockOnly || i.qty() <= threshold)
                 .toList();
 
         return page(items, page, size, Function.identity());
@@ -78,7 +81,10 @@ public class InventoryController {
     public PageResponse<InventoryTxnItem> transactions(
             @RequestParam(required = false) String orderNo,
             @RequestParam(required = false) Long skuId,
+            @RequestParam(required = false) String locationId,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -104,6 +110,24 @@ public class InventoryController {
         if (type != null && !type.isBlank()) {
             sql.append(" and t.type = ?").append(params.size() + 1);
             params.add(type.trim().toUpperCase());
+        }
+        // Standard CAST syntax: Hibernate's native-query parser treats `::date`
+        // as a named parameter, so the PostgreSQL shorthand cannot be used here.
+        if (from != null && !from.isBlank()) {
+            sql.append(" and cast(t.occurred_at as date) >= cast(?").append(params.size() + 1).append(" as date)");
+            params.add(from.trim());
+        }
+        if (to != null && !to.isBlank()) {
+            sql.append(" and cast(t.occurred_at as date) <= cast(?").append(params.size() + 1).append(" as date)");
+            params.add(to.trim());
+        }
+        if (locationId != null && !locationId.isBlank()) {
+            try {
+                sql.append(" and t.location_id = ?").append(params.size() + 1);
+                params.add(Long.parseLong(locationId.trim()));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("库位 ID 必须是数字");
+            }
         }
         sql.append(" order by t.occurred_at desc, t.id desc");
 

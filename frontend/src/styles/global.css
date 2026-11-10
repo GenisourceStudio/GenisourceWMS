@@ -2354,3 +2354,84 @@ html[lang^="zh"] :is(
   color: var(--gs-jade-700);
   font-size: var(--gs-text-body-s);
 }
+
+/* ------------------------------------------------------------ C3 filters */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 36px;
+  border: var(--gs-hairline) solid var(--gs-line);
+  border-radius: var(--gs-r-md);
+  background: var(--gs-canvas);
+  font-size: var(--gs-text-body-s);
+  color: var(--gs-ink-2);
+}
+
+.panel-head-padded {
+  padding: 16px 24px 12px;
+  margin-bottom: 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pagination-info,
+.pagination-page {
+  font-size: var(--gs-text-caption);
+  color: var(--gs-ink-3);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--gs-text-caption);
+}
+
+.qty-low {
+  color: var(--gs-warn);
+  font-weight: 500;
+}
+
+.qty-flag {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--gs-warn);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.scan-refresh {
+  min-height: 56px;
+  border-color: var(--gs-jade-500);
+  background: rgba(33, 153, 122, 0.18);
+  color: #d9fff2;
+  font-size: var(--gs-text-body-l);
+}

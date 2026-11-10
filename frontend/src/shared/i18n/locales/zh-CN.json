@@ -45,7 +45,14 @@
     "schemaTables": "已建表",
     "roles": "角色",
     "loading": "读取中…",
-    "unavailable": "无法连接后端"
+    "unavailable": "无法连接后端",
+    "pendingPanel": "待处理单据",
+    "viewAll": "查看全部",
+    "noPending": "当前没有待处理单据",
+    "lowStockPanel": "库存预警",
+    "lowStockNote": "在库数量 ≤ {{threshold}} 件",
+    "noLowStock": "库存充足",
+    "noLowStockNote": "目前没有低库存项"
   },
   "common": {
     "networkError": "网络异常，请稍后重试",
@@ -168,7 +175,8 @@
     "cameraHint": "将条码对准取景框，识别后自动填入",
     "cameraUnavailable": "无法访问摄像头",
     "cameraFallbackHint": "可直接手输编码，功能不受影响",
-    "language": "语言"
+    "language": "语言",
+    "refreshTask": "刷新任务"
   },
   "inventory": {
     "searchPlaceholder": "按 SKU 或库位搜索",
@@ -183,7 +191,14 @@
     "inbound": "入库",
     "outbound": "出库",
     "emptyNote": "还没有库存，完成入库上架后会显示",
-    "ledgerEmptyNote": "还没有流水，第一笔出入库后会出现在这里"
+    "ledgerEmptyNote": "还没有流水，第一笔出入库后会出现在这里",
+    "lowStockOnly": "只看低库存",
+    "allTypes": "全部类型",
+    "from": "起始日期",
+    "to": "结束日期",
+    "locationId": "库位 ID",
+    "reset": "重置",
+    "lowStock": "低库存"
   },
   "logs": {
     "allActions": "全部操作",
@@ -192,7 +207,8 @@
     "detail": "明细",
     "expand": "展开",
     "collapse": "收起",
-    "emptyNote": "还没有操作记录"
+    "emptyNote": "还没有操作记录",
+    "actor": "操作人"
   },
   "users": {
     "create": "新建用户",
@@ -209,5 +225,10 @@
     "passwordChanged": "密码已修改，下次登录需用新密码",
     "enabledLabel": "启用该账号",
     "emptyNote": "点击「新建用户」添加作业员"
+  },
+  "pagination": {
+    "rows": "条",
+    "prev": "上一页",
+    "next": "下一页"
   }
 }

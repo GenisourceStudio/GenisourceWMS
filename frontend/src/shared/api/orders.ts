@@ -33,9 +33,12 @@ export interface CreateInboundInput {
   lines: { skuId: number; expectedQty: number }[]
 }
 
-export function fetchInboundOrders(status?: string): Promise<Page<InboundOrder>> {
-  const query = status ? `?status=${encodeURIComponent(status)}` : ''
-  return apiGet<Page<InboundOrder>>(`/api/v1/inbound-orders${query}`)
+export function fetchInboundOrders(status?: string, page = 0, size = 20): Promise<Page<InboundOrder>> {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  params.set('page', String(page))
+  params.set('size', String(size))
+  return apiGet<Page<InboundOrder>>(`/api/v1/inbound-orders?${params}`)
 }
 
 export function fetchInboundOrder(id: number): Promise<InboundOrder> {

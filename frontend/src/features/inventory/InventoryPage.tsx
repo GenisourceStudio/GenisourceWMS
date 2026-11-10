@@ -3,44 +3,140 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
-import { fetchInventory, fetchTransactions } from '../../shared/api/inventory'
+import {
+  fetchInventory, fetchTransactions,
+  type InventoryQuery, type TxnQuery,
+} from '../../shared/api/inventory'
 import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
+import { Pagination } from '../../shared/ui/Pagination'
 
+const PAGE_SIZE = 20
+
+/** C3: stock / ledger views with combined filters and real pagination. */
 export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
   const { t } = useTranslation()
+  const isStock = mode === 'stock'
+  const [page, setPage] = useState(0)
+
+  // Stock filters
   const [keyword, setKeyword] = useState('')
-  const [search, setSearch] = useState('')
+  const [lowOnly, setLowOnly] = useState(false)
+  const [stockQuery, setStockQuery] = useState<InventoryQuery>({})
+
+  // Ledger filters
+  const [orderNo, setOrderNo] = useState('')
+  const [type, setType] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [locationId, setLocationId] = useState('')
+  const [txnQuery, setTxnQuery] = useState<TxnQuery>({})
 
   const stock = useQuery({
-    queryKey: ['inventory', search],
-    queryFn: () => fetchInventory(search),
-    enabled: mode === 'stock',
+    queryKey: ['inventory', stockQuery, page],
+    queryFn: () => fetchInventory({ ...stockQuery, page, size: PAGE_SIZE }),
+    enabled: isStock,
   })
   const txns = useQuery({
-    queryKey: ['transactions', search],
-    queryFn: () => fetchTransactions(search ? { orderNo: search } : undefined),
-    enabled: mode === 'ledger',
+    queryKey: ['transactions', txnQuery, page],
+    queryFn: () => fetchTransactions({ ...txnQuery, page, size: PAGE_SIZE }),
+    enabled: !isStock,
   })
 
-  const query = mode === 'stock' ? stock : txns
-  const isStock = mode === 'stock'
+  const query = isStock ? stock : txns
+  const data = isStock ? stock.data : txns.data
+
+  function applyStock() {
+    setPage(0)
+    setStockQuery({
+      keyword: keyword.trim() || undefined,
+      lowStockOnly: lowOnly || undefined,
+      threshold: lowOnly ? 5 : undefined,
+    })
+  }
+
+  function applyTxn() {
+    setPage(0)
+    setTxnQuery({
+      orderNo: orderNo.trim() || undefined,
+      type: type || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      locationId: locationId || undefined,
+    })
+  }
+
+  function reset() {
+    setPage(0)
+    if (isStock) {
+      setKeyword(''); setLowOnly(false); setStockQuery({})
+    } else {
+      setOrderNo(''); setType(''); setFrom(''); setTo(''); setLocationId(''); setTxnQuery({})
+    }
+  }
 
   return (
     <>
       <div className="page-head">
         <h1 className="page-title">{isStock ? t('nav.inventory') : t('nav.transactions')}</h1>
-        <div className="page-actions">
-          <input
-            className="field-input field-input-sm"
-            placeholder={isStock ? t('inventory.searchPlaceholder') : t('inventory.orderNoPlaceholder')}
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') setSearch(keyword) }}
-          />
-          <button type="button" className="btn btn-secondary" onClick={() => setSearch(keyword)}>
-            <Icon name="search" size={15} /> {t('sku.search')}
-          </button>
-        </div>
+      </div>
+
+      <div className="filter-bar">
+        {isStock ? (
+          <>
+            <input
+              className="field-input field-input-sm"
+              placeholder={t('inventory.searchPlaceholder')}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') applyStock() }}
+            />
+            <label className="filter-check">
+              <input type="checkbox" checked={lowOnly} onChange={(e) => setLowOnly(e.target.checked)} />
+              {t('inventory.lowStockOnly')}
+            </label>
+          </>
+        ) : (
+          <>
+            <input
+              className="field-input field-input-sm"
+              placeholder={t('inventory.orderNoPlaceholder')}
+              value={orderNo}
+              onChange={(e) => setOrderNo(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') applyTxn() }}
+            />
+            <select className="field-input field-input-sm" value={type} onChange={(e) => setType(e.target.value)}>
+              <option value="">{t('inventory.allTypes')}</option>
+              <option value="INBOUND">{t('inventory.inbound')}</option>
+              <option value="OUTBOUND">{t('inventory.outbound')}</option>
+            </select>
+            <input
+              className="field-input field-input-sm"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              aria-label={t('inventory.from')}
+            />
+            <input
+              className="field-input field-input-sm"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              aria-label={t('inventory.to')}
+            />
+            <input
+              className="field-input field-input-sm"
+              placeholder={t('inventory.locationId')}
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+            />
+          </>
+        )}
+        <button type="button" className="btn btn-secondary" onClick={isStock ? applyStock : applyTxn}>
+          <Icon name="search" size={15} /> {t('sku.search')}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={reset}>
+          <Icon name="refresh" size={15} /> {t('inventory.reset')}
+        </button>
       </div>
 
       <section className="panel panel-flush">
@@ -71,7 +167,10 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
                     <td className="mono cell-code">{item.skuCode}</td>
                     <td>{item.skuName}</td>
                     <td className="mono">{item.locationCode}</td>
-                    <td className="num mono inventory-qty">{item.qty}</td>
+                    <td className={`num mono inventory-qty ${item.qty <= 5 ? 'qty-low' : ''}`}>
+                      {item.qty}
+                      {item.qty <= 5 && <span className="qty-flag" title={t('inventory.lowStock')}>!</span>}
+                    </td>
                     <td className="mono cell-muted">{dayjs(item.updatedAt).format('YYYY.MM.DD HH:mm')}</td>
                   </tr>
                 ))}
@@ -119,6 +218,10 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
           )
         ) : null}
       </section>
+
+      {data && (
+        <Pagination page={page} size={PAGE_SIZE} total={data.total} onChange={setPage} />
+      )}
     </>
   )
 }

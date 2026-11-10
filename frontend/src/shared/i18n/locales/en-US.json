@@ -45,7 +45,14 @@
     "schemaTables": "Tables",
     "roles": "Roles",
     "loading": "Loading…",
-    "unavailable": "Backend unreachable"
+    "unavailable": "Backend unreachable",
+    "pendingPanel": "Pending documents",
+    "viewAll": "View all",
+    "noPending": "No pending documents right now",
+    "lowStockPanel": "Low stock alerts",
+    "lowStockNote": "On hand ≤ {{threshold}}",
+    "noLowStock": "Stock looks healthy",
+    "noLowStockNote": "No low-stock items at the moment"
   },
   "common": {
     "networkError": "Network error, please retry",
@@ -168,7 +175,8 @@
     "cameraHint": "Align the barcode with the frame; it fills in automatically",
     "cameraUnavailable": "Camera unavailable",
     "cameraFallbackHint": "Enter the code manually — everything still works",
-    "language": "Language"
+    "language": "Language",
+    "refreshTask": "Refresh task"
   },
   "inventory": {
     "searchPlaceholder": "Search by SKU or location",
@@ -183,7 +191,14 @@
     "inbound": "Inbound",
     "outbound": "Outbound",
     "emptyNote": "No stock yet — it appears after an inbound put-away",
-    "ledgerEmptyNote": "No ledger entries yet — the first movement creates one"
+    "ledgerEmptyNote": "No ledger entries yet — the first movement creates one",
+    "lowStockOnly": "Low stock only",
+    "allTypes": "All types",
+    "from": "From",
+    "to": "To",
+    "locationId": "Location ID",
+    "reset": "Reset",
+    "lowStock": "Low stock"
   },
   "logs": {
     "allActions": "All actions",
@@ -192,7 +207,8 @@
     "detail": "Detail",
     "expand": "Expand",
     "collapse": "Collapse",
-    "emptyNote": "No operations recorded yet"
+    "emptyNote": "No operations recorded yet",
+    "actor": "Operator"
   },
   "users": {
     "create": "New user",
@@ -209,5 +225,10 @@
     "passwordChanged": "Password changed — use the new one at next login",
     "enabledLabel": "Account enabled",
     "emptyNote": "Use \"New user\" to add an operator"
+  },
+  "pagination": {
+    "rows": "rows",
+    "prev": "Prev",
+    "next": "Next"
   }
 }

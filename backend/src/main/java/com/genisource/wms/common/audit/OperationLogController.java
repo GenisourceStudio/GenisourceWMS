@@ -3,6 +3,7 @@ package com.genisource.wms.common.audit;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -40,19 +41,42 @@ public class OperationLogController {
     @SuppressWarnings("unchecked")
     public PageResponse<LogItem> list(
             @RequestParam(required = false) String action,
+            @RequestParam(required = false) String actor,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        String sql = """
+        StringBuilder sql = new StringBuilder("""
                 select id, occurred_at, actor_name, action, target_type, target_id,
                        cast(detail_json as text), ip
                 from operation_log
-                """ + (action == null || action.isBlank() ? "" : " where action = ?1 ")
-                + " order by occurred_at desc, id desc";
-
-        var query = entityManager.createNativeQuery(sql, Tuple.class);
+                where 1 = 1
+                """);
+        List<Object> params = new ArrayList<>();
         if (action != null && !action.isBlank()) {
-            query.setParameter(1, action.trim());
+            sql.append(" and action = ?").append(params.size() + 1);
+            params.add(action.trim());
+        }
+        if (actor != null && !actor.isBlank()) {
+            sql.append(" and actor_name = ?").append(params.size() + 1);
+            params.add(actor.trim());
+        }
+        // CAST instead of `::date`: Hibernate's native-query parser reads the
+        // PostgreSQL shorthand as a named parameter.
+        if (from != null && !from.isBlank()) {
+            sql.append(" and cast(occurred_at as date) >= cast(?").append(params.size() + 1).append(" as date)");
+            params.add(from.trim());
+        }
+        if (to != null && !to.isBlank()) {
+            sql.append(" and cast(occurred_at as date) <= cast(?").append(params.size() + 1).append(" as date)");
+            params.add(to.trim());
+        }
+        sql.append(" order by occurred_at desc, id desc");
+
+        var query = entityManager.createNativeQuery(sql.toString(), Tuple.class);
+        for (int i = 0; i < params.size(); i++) {
+            query.setParameter(i + 1, params.get(i));
         }
 
         List<Tuple> rows = query.getResultList();
@@ -69,9 +93,9 @@ public class OperationLogController {
                 .toList();
 
         int s = Math.min(Math.max(size, 1), 100);
-        int from = Math.min(Math.max(page, 0) * s, items.size());
-        int to = Math.min(from + s, items.size());
-        var paged = new PageImpl<>(items.subList(from, to), PageRequest.of(Math.max(page, 0), s), items.size());
+        int offset = Math.min(Math.max(page, 0) * s, items.size());
+        int end = Math.min(offset + s, items.size());
+        var paged = new PageImpl<>(items.subList(offset, end), PageRequest.of(Math.max(page, 0), s), items.size());
         return PageResponse.of(paged, java.util.function.Function.identity());
     }
 
