@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Icon, type IconName } from '../../shared/ui/Icon'
 import { SkuListPage } from './SkuListPage'
 import { LocationListPage } from './LocationListPage'
 import { PartnerListPage } from './PartnerListPage'
@@ -14,10 +15,10 @@ export function MasterdataPage() {
   const { t } = useTranslation()
   const [tab, setTab] = useState<MasterTab>('sku')
 
-  const tabs: { key: MasterTab; label: string }[] = [
-    { key: 'sku', label: t('master.tabSku') },
-    { key: 'location', label: t('master.tabLocation') },
-    { key: 'partner', label: t('master.tabPartner') },
+  const tabs: { key: MasterTab; label: string; icon: IconName }[] = [
+    { key: 'sku', label: t('master.tabSku'), icon: 'box' },
+    { key: 'location', label: t('master.tabLocation'), icon: 'layers' },
+    { key: 'partner', label: t('master.tabPartner'), icon: 'user' },
   ]
 
   return (
@@ -34,6 +35,7 @@ export function MasterdataPage() {
               className={tab === item.key ? 'tab is-active' : 'tab'}
               onClick={() => setTab(item.key)}
             >
+              <Icon name={item.icon} size={15} />
               {item.label}
             </button>
           ))}

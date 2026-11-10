@@ -4,6 +4,17 @@ import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../shared/api/http'
 import { fetchInboundTask, confirmInboundLine } from '../../shared/api/scan'
+import { ButtonDots, Icon } from '../../shared/ui/Icon'
+import { haptic } from '../../shared/ui/haptics'
+import { BarcodeScanner, type ScanTarget } from '../../shared/ui/BarcodeScanner'
+
+/** Enter walks the operator down the field chain: SKU → location → qty → confirm. */
+function focusNext(event: React.KeyboardEvent<HTMLInputElement>, ref: React.RefObject<HTMLInputElement | null>) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    ref.current?.focus()
+  }
+}
 
 /**
  * Mobile inbound job — the "工位终端" pattern from design-system.md §6.
@@ -28,7 +39,10 @@ export function InboundJobPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [tokens, setTokens] = useState<Record<number, string>>({})
+  const [scanTarget, setScanTarget] = useState<ScanTarget | null>(null)
   const skuRef = useRef<HTMLInputElement>(null)
+  const locationRef = useRef<HTMLInputElement>(null)
+  const qtyRef = useRef<HTMLInputElement>(null)
 
   const lines = task.data?.lines ?? []
   const doneCount = lines.filter((l) => l.status === 'DONE').length
@@ -38,6 +52,12 @@ export function InboundJobPage() {
   // must not show doneCount + 1 (it used to render "3 / 2").
   const progressLine = current ? doneCount + 1 : doneCount
   const progressPct = lines.length ? (doneCount / lines.length) * 100 : 0
+
+  const skuTyped = sku.trim()
+  const skuMatch = current ? skuTyped.length > 0 && skuTyped === current.skuCode : false
+  // Only call a mismatch once the typed value is as long as the expected code,
+  // so manual typing does not flash an error on every keystroke.
+  const skuMismatch = current ? skuTyped.length >= current.skuCode.length && !skuMatch : false
 
   // When the current row changes (after a successful confirm), prefill its
   // expected quantity and put the cursor back in the SKU field.
@@ -60,7 +80,7 @@ export function InboundJobPage() {
   }, [current?.id])
 
   async function handleConfirm() {
-    if (!current) return
+    if (!current || submitting) return
     setError(null)
     setSubmitting(true)
     try {
@@ -70,6 +90,7 @@ export function InboundJobPage() {
         qty: Number(qty),
         clientToken: tokens[current.id] ?? crypto.randomUUID(),
       })
+      haptic([30, 40, 30])
       setTokens((prev) => {
         const next = { ...prev }
         delete next[current.id]
@@ -78,6 +99,7 @@ export function InboundJobPage() {
       await queryClient.invalidateQueries({ queryKey: ['inbound-task', orderId] })
       await queryClient.invalidateQueries({ queryKey: ['inbound-orders'] })
     } catch (err) {
+      haptic(80)
       setError(err instanceof ApiError ? err.message : t('common.networkError'))
     } finally {
       setSubmitting(false)
@@ -85,17 +107,30 @@ export function InboundJobPage() {
   }
 
   if (task.isLoading) {
-    return <div className="mobile"><div className="mobile-top">{t('common.loading')}</div></div>
+    return (
+      <div className="mobile">
+        <div className="mobile-top">
+          <Link to="/m/tasks" className="text-link"><Icon name="arrow-left" size={14} />{t('scan.tasks')}</Link>
+        </div>
+        <div className="mobile-body mobile-done">
+          <span className="scan-wait">
+            {t('common.loading')}
+            <span className="scan-caret" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+    )
   }
   if (task.isError || !task.data) {
     return (
       <div className="mobile">
         <div className="mobile-top">
-          <Link to="/m/tasks" className="text-link">← {t('order.backToList')}</Link>
+          <Link to="/m/tasks" className="text-link"><Icon name="arrow-left" size={14} />{t('scan.tasks')}</Link>
           <span>{t('common.loadFailed')}</span>
         </div>
         <div className="mobile-body">
-          <p className="field-error" role="alert">
+          <p className="scan-error" role="alert">
+            <Icon name="alert" size={16} />
             {task.error instanceof ApiError ? task.error.message : t('common.networkError')}
           </p>
         </div>
@@ -106,7 +141,7 @@ export function InboundJobPage() {
   return (
     <div className="mobile">
       <div className="mobile-top">
-        <Link to="/m/tasks" className="text-link">← {t('scan.tasks')}</Link>
+        <Link to="/m/tasks" className="text-link"><Icon name="arrow-left" size={14} />{t('scan.tasks')}</Link>
         <span className="mono">{task.data.orderNo}</span>
       </div>
 
@@ -118,57 +153,122 @@ export function InboundJobPage() {
       {current ? (
         <div className="mobile-body">
           <div className="scan-target">
+            <div className="scan-target-top">
+              <span className="scan-target-index">{t('scan.line')} {progressLine} / {lines.length}</span>
+              <span className="scan-confirmed">
+                <Icon name="check" size={13} />
+                {t('scan.confirmed')} {doneCount}/{lines.length}
+              </span>
+            </div>
             <div className="scan-target-code mono">{current.skuCode}</div>
             <div className="scan-target-name">{current.skuName}</div>
             <div className="scan-target-qty mono">{t('scan.expected')} {current.expectedQty}</div>
           </div>
 
+          <div className="scan-input-row">
+            <input
+              ref={skuRef}
+              className="scan-box scan-field"
+              placeholder={t('scan.scanSku')}
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              onKeyDown={(e) => focusNext(e, locationRef)}
+              aria-label={t('scan.scanSku')}
+            />
+            <button type="button" className="scan-trigger" onClick={() => setScanTarget('sku')} aria-label={t('scan.cameraSku')}>
+              <Icon name="scan" size={20} />
+            </button>
+          </div>
+          <div className="scan-wait" aria-live="polite">
+            {skuMatch ? (
+              <span className="scan-match"><Icon name="check" size={14} />{t('scan.matched')}</span>
+            ) : skuMismatch ? (
+              <span className="scan-match scan-mismatch"><Icon name="alert" size={14} />{t('scan.mismatch')}</span>
+            ) : (
+              <>
+                {t('scan.waiting')}
+                <span className="scan-caret" aria-hidden="true" />
+              </>
+            )}
+          </div>
+          <div className="scan-input-row">
+            <input
+              ref={locationRef}
+              className="scan-box scan-field"
+              placeholder={t('scan.scanLocation')}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              onKeyDown={(e) => focusNext(e, qtyRef)}
+              aria-label={t('scan.scanLocation')}
+            />
+            <button type="button" className="scan-trigger" onClick={() => setScanTarget('location')} aria-label={t('scan.cameraLocation')}>
+              <Icon name="scan" size={20} />
+            </button>
+          </div>
           <input
-            ref={skuRef}
-            className="scan-box scan-field"
-            placeholder={t('scan.scanSku')}
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            aria-label={t('scan.scanSku')}
-          />
-          <input
-            className="scan-box scan-field"
-            placeholder={t('scan.scanLocation')}
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            aria-label={t('scan.scanLocation')}
-          />
-          <input
+            ref={qtyRef}
             className="scan-box scan-field num"
             type="number"
             min="1"
             value={qty}
             onChange={(e) => setQty(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void handleConfirm()
+              }
+            }}
             aria-label={t('scan.qty')}
           />
 
-          {error && <p className="scan-error" role="alert">{error}</p>}
+          {error && (
+            <p className="scan-error" role="alert">
+              <Icon name="alert" size={16} />
+              {error}
+            </p>
+          )}
 
           <div className="scan-actions">
             <button type="button" className="scan-btn" onClick={() => skuRef.current?.focus()}>
-              {t('scan.manual')}
+              <Icon name="file" size={19} />{t('scan.manual')}
             </button>
             <button type="button" className="scan-btn" onClick={() => { setSku(''); setLocation(''); setError(null); skuRef.current?.focus() }}>
-              {t('scan.rescan')}
+              <Icon name="refresh" size={19} />{t('scan.rescan')}
             </button>
             <button type="button" className="scan-btn scan-btn-primary" onClick={handleConfirm} disabled={submitting}>
-              {submitting ? t('common.saving') : t('scan.confirmLine')}
+              {submitting ? <><ButtonDots />{t('common.saving')}</> : <><Icon name="check" size={20} />{t('scan.confirmLine')}</>}
             </button>
-            <Link to="/m/tasks" className="scan-btn scan-btn-link">{t('common.cancel')}</Link>
+            <Link to="/m/tasks" className="scan-btn scan-btn-link">
+              <Icon name="close" size={19} />{t('common.cancel')}
+            </Link>
           </div>
         </div>
       ) : (
-        <div className="mobile-body mobile-done">
-          <div className="scan-done-mark">✓</div>
+        <div className="mobile-body mobile-done rise">
+          <div className="scan-done-mark"><Icon name="check" size={40} /></div>
           <div className="scan-done-title">{t('scan.allDone')}</div>
           <div className="mono">{doneCount} / {lines.length} {t('scan.linesDone')}</div>
-          <Link to="/m/tasks" className="btn btn-primary">{t('scan.backToTasks')}</Link>
+          <Link to="/m/tasks" className="btn btn-primary">
+            <Icon name="arrow-left" size={15} />{t('scan.backToTasks')}
+          </Link>
         </div>
+      )}
+
+      {scanTarget && (
+        <BarcodeScanner
+          target={scanTarget}
+          onDetected={(code) => {
+            if (scanTarget === 'sku') {
+              setSku(code)
+              locationRef.current?.focus()
+            } else {
+              setLocation(code)
+              qtyRef.current?.focus()
+            }
+            haptic('success')
+          }}
+          onClose={() => setScanTarget(null)}
+        />
       )}
     </div>
   )

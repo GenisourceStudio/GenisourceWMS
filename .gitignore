@@ -17,3 +17,11 @@ target/
 .idea/
 .vscode/
 .pnpm-store/
+
+# Local browser-preview / debugging artifacts (never project sources)
+.bh-config/
+.bh-runtime/
+.chrome-profile/
+.preview-*.png
+.frame-*.png
+frontend/public/__*.html

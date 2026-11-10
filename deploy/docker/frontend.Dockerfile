@@ -4,12 +4,22 @@ FROM node:22-alpine AS build
 # Registry can be overridden for mainland China (e.g. https://registry.npmmirror.com).
 ARG NPM_REGISTRY=https://registry.npmjs.org
 WORKDIR /app
-RUN npm install -g pnpm@10.32.1 --registry=${NPM_REGISTRY}
+# Docker Desktop injects HTTP(S)_PROXY build args from ~/.docker/config.json into
+# every RUN. Injected args win over Dockerfile ENV, so clear them per command:
+# that LAN proxy is unreachable from the build network, while the npm registry
+# is directly reachable (Maven already resolves dependencies directly).
+RUN unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy \
+        npm_config_proxy npm_config_https_proxy; \
+    npm install -g pnpm@10.32.1 --registry=${NPM_REGISTRY}
 
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN pnpm config set registry ${NPM_REGISTRY} && pnpm install --frozen-lockfile
+RUN unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy \
+        npm_config_proxy npm_config_https_proxy; \
+    pnpm config set registry ${NPM_REGISTRY} && pnpm install --frozen-lockfile
 
 COPY frontend/ ./
+# `pnpm build` = `tsc --noEmit && vite build`; keep the repository's strict
+# tsconfig (noUnusedLocals/noUnusedParameters) in force inside the image too.
 RUN pnpm build
 
 FROM nginx:stable-alpine

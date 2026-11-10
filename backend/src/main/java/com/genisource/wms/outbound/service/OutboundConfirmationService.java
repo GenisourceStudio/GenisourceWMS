@@ -94,10 +94,6 @@ public class OutboundConfirmationService {
                 .findById(orderId)
                 .orElseThrow(() -> WmsException.notFound("出库单不存在：" + orderId));
 
-        if (order.getStatus() == OutboundOrder.Status.COMPLETED) {
-            throw WmsException.conflict("ORDER_COMPLETED", "出库单已完成");
-        }
-
         OutboundLine line = order.getLines().stream()
                 .filter(l -> l.getId().equals(lineId))
                 .findFirst()
@@ -110,6 +106,11 @@ public class OutboundConfirmationService {
                         lineId, "DONE", line.getConfirmedQty(), order.getStatus().name());
             }
             throw WmsException.conflict("DUPLICATE_SCAN", "该行已完成，请勿重复扫描");
+        }
+
+        // After the idempotent replay branch — see InboundConfirmationService.
+        if (order.getStatus() == OutboundOrder.Status.COMPLETED) {
+            throw WmsException.conflict("ORDER_COMPLETED", "出库单已完成");
         }
 
         if (!line.getSku().getCode().equalsIgnoreCase(request.skuCode().trim())) {

@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchOutboundOrder, type OrderStatus } from '../../shared/api/outbound'
+import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
   DRAFT: 'status-draft',
@@ -22,13 +23,15 @@ export function OutboundOrderDetailPage() {
     enabled: Number.isFinite(orderId),
   })
 
-  if (order.isLoading) return <div className="empty"><div className="empty-note">{t('common.loading')}</div></div>
+  if (order.isLoading) return <div className="panel panel-flush"><TableSkeleton cols={4} rows={4} /></div>
   if (order.isError || !order.data) {
     return (
-      <div className="empty">
-        <div className="empty-title">{t('common.loadFailed')}</div>
-        <div className="empty-note">{order.error instanceof ApiError ? order.error.message : t('common.networkError')}</div>
-      </div>
+      <EmptyState
+        tone="error"
+        icon="alert"
+        title={t('common.loadFailed')}
+        note={order.error instanceof ApiError ? order.error.message : t('common.networkError')}
+      />
     )
   }
 
@@ -39,7 +42,8 @@ export function OutboundOrderDetailPage() {
   return (
     <>
       <div className="detail-head">
-        <Link to="/outbound-orders" className="text-link">← {t('order.backToList')}</Link>
+        <Link to="/outbound-orders" className="text-link"><Icon name="arrow-left" size={14} /> {t('order.backToList')}</Link>
+        <Icon name="file" size={20} />
         <h1 className="page-title mono">{data.orderNo}</h1>
         <span className={`status ${STATUS_CLASS[data.status]}`}>{t(`order.${data.status.toLowerCase()}`)}</span>
       </div>
@@ -51,6 +55,7 @@ export function OutboundOrderDetailPage() {
           <div><span className="field-label">{t('order.remark')}</span><span>{data.remark ?? '—'}</span></div>
         </div>
         <div className="progress-wrap">
+          <span className="progress-label">{t('order.colProgress')}</span>
           <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
           <span className="mono">{done} / {data.lines.length} {t('order.linesDone')}</span>
         </div>

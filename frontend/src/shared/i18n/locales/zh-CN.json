@@ -23,6 +23,8 @@
     "password": "密码",
     "submit": "登录",
     "submitting": "登录中…",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "logout": "退出"
   },
   "dashboard": {
@@ -53,7 +55,8 @@
     "save": "保存",
     "saving": "保存中…",
     "cancel": "取消",
-    "close": "关闭"
+    "close": "关闭",
+    "refresh": "刷新"
   },
   "sku": {
     "search": "搜索",
@@ -148,7 +151,19 @@
     "backConsole": "返回控制台",
     "startJob": "开始作业",
     "pickHint": "建议库位",
-    "noTasks": "当前没有待处理的作业单"
+    "noTasks": "当前没有待处理的作业单",
+    "waiting": "等待扫描",
+    "matched": "编码匹配",
+    "mismatch": "编码不匹配",
+    "confirmed": "已确认",
+    "cameraTitle": "摄像头扫码",
+    "cameraSku": "扫描 SKU 编码",
+    "cameraLocation": "扫描库位编码",
+    "cameraStarting": "正在启动摄像头…",
+    "cameraHint": "将条码对准取景框，识别后自动填入",
+    "cameraUnavailable": "无法访问摄像头",
+    "cameraFallbackHint": "可直接手输编码，功能不受影响",
+    "language": "语言"
   },
   "inventory": {
     "searchPlaceholder": "按 SKU 或库位搜索",

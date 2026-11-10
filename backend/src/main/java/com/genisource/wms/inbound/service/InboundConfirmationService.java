@@ -48,10 +48,6 @@ public class InboundConfirmationService {
                 .findById(orderId)
                 .orElseThrow(() -> WmsException.notFound("入库单不存在：" + orderId));
 
-        if (order.getStatus() == InboundOrder.Status.COMPLETED) {
-            throw WmsException.conflict("ORDER_COMPLETED", "入库单已完成");
-        }
-
         InboundLine line = order.getLines().stream()
                 .filter(l -> l.getId().equals(lineId))
                 .findFirst()
@@ -67,6 +63,15 @@ public class InboundConfirmationService {
                 return new ConfirmLineResponse(lineId, "DONE", qtyAfter, order.getStatus().name());
             }
             throw WmsException.conflict("DUPLICATE_SCAN", "该行已完成，请勿重复扫描");
+        }
+
+        // A completed order has no pending lines, so reaching here means the
+        // data is inconsistent. This guard sits AFTER the idempotent-replay
+        // branch: a single-line order becomes COMPLETED on its first confirm,
+        // and a retry with the same clientToken must still replay the result
+        // instead of being rejected as ORDER_COMPLETED.
+        if (order.getStatus() == InboundOrder.Status.COMPLETED) {
+            throw WmsException.conflict("ORDER_COMPLETED", "入库单已完成");
         }
 
         // --- Scan validation (all of it before any write).

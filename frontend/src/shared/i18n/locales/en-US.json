@@ -23,6 +23,8 @@
     "password": "Password",
     "submit": "Sign in",
     "submitting": "Signing in…",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "logout": "Sign out"
   },
   "dashboard": {
@@ -53,7 +55,8 @@
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "close": "Close"
+    "close": "Close",
+    "refresh": "Refresh"
   },
   "sku": {
     "search": "Search",
@@ -148,7 +151,19 @@
     "backConsole": "Back to console",
     "startJob": "Start job",
     "pickHint": "Pick from",
-    "noTasks": "No pending tasks"
+    "noTasks": "No pending tasks",
+    "waiting": "Waiting for scan",
+    "matched": "Code matches",
+    "mismatch": "Code does not match",
+    "confirmed": "Confirmed",
+    "cameraTitle": "Camera scan",
+    "cameraSku": "Scan SKU code",
+    "cameraLocation": "Scan location code",
+    "cameraStarting": "Starting camera…",
+    "cameraHint": "Align the barcode with the frame; it fills in automatically",
+    "cameraUnavailable": "Camera unavailable",
+    "cameraFallbackHint": "Enter the code manually — everything still works",
+    "language": "Language"
   },
   "inventory": {
     "searchPlaceholder": "Search by SKU or location",

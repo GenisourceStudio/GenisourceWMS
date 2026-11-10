@@ -4,6 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { ApiError } from '../shared/api/http'
 import { useAuth } from '../shared/auth/AuthContext'
 import { BrandMark, HeroRipple } from '../shared/ui/BrandMark'
+import { ButtonDots, Icon } from '../shared/ui/Icon'
+import { LanguageToggle } from '../shared/ui/LanguageToggle'
+
+/** The four brand principles, made visible as hairline rules on the navy panel. */
+const PRINCIPLES = [
+  { index: '01', en: 'Origin', zh: '源头' },
+  { index: '02', en: 'Ripple', zh: '扩散' },
+  { index: '03', en: 'Precision', zh: '精密' },
+  { index: '04', en: 'Trust', zh: '可信' },
+]
 
 /**
  * Split screen: navy brand panel on the left, plain white form on the right.
@@ -15,6 +25,7 @@ export function LoginPage() {
   const location = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -47,6 +58,7 @@ export function LoginPage() {
             <div className="shell-brand-name">{t('app.name')}</div>
             <div className="shell-brand-sub">{t('app.subtitle')}</div>
           </div>
+          <div className="login-brand-lang"><LanguageToggle /></div>
         </div>
 
         <div className="login-brand-copy">
@@ -54,6 +66,17 @@ export function LoginPage() {
           <h1 className="login-brand-title">{t('login.brandTitle')}</h1>
           <p className="login-brand-lead">{t('login.brandLead')}</p>
         </div>
+
+        <div className="login-brand-principles" aria-hidden="true">
+          {PRINCIPLES.map((item) => (
+            <div className="login-brand-principle" key={item.index}>
+              <span className="idx">{item.index}</span>
+              <span className="en">{item.en}</span>
+              <span className="zh">{item.zh}</span>
+            </div>
+          ))}
+        </div>
+        <p className="sr-only">品牌原则：源头、扩散、精密、可信。</p>
 
         <HeroRipple />
       </aside>
@@ -65,37 +88,75 @@ export function LoginPage() {
 
           <label className="field">
             <span className="field-label">{t('login.username')}</span>
-            <input
-              className="field-input"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+            <span className="field-wrap">
+              <Icon name="user" size={16} className="field-icon" />
+              <input
+                className="field-input"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </span>
           </label>
 
           <label className="field">
             <span className="field-label">{t('login.password')}</span>
-            <input
-              className="field-input"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <span className="field-wrap">
+              <Icon name="lock" size={16} className="field-icon" />
+              <input
+                className="field-input has-toggle"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="field-toggle"
+                aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
+                aria-pressed={showPassword}
+                onClick={(e) => {
+                  // The control lives inside a <label>; suppress the label's
+                  // default focus forwarding so the reveal is the only action.
+                  e.preventDefault()
+                  setShowPassword((visible) => !visible)
+                }}
+              >
+                <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} />
+              </button>
+            </span>
           </label>
 
           {error && (
             <p className="field-error" role="alert">
+              <Icon name="alert" size={14} />
               {error}
             </p>
           )}
 
           <button className="btn btn-primary" type="submit" disabled={submitting}>
-            {submitting ? t('login.submitting') : t('login.submit')}
+            {submitting ? (
+              <>
+                <ButtonDots />
+                {t('login.submitting')}
+              </>
+            ) : (
+              <>
+                <Icon name="arrow-right" size={15} />
+                {t('login.submit')}
+              </>
+            )}
           </button>
+
+          <div className="login-foot">
+            <Icon name="lock" size={13} />
+            {t('app.subtitle')}
+            <span aria-hidden="true">·</span>
+            SECURE SESSION
+          </div>
         </form>
       </main>
     </div>

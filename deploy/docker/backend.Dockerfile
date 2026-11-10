@@ -10,7 +10,10 @@ COPY backend/pom.xml /build/pom.xml
 RUN mvn -B -q -s /build/settings-${MAVEN_MIRROR}.xml dependency:resolve
 
 COPY backend/src /build/src
-RUN mvn -B -q -s /build/settings-${MAVEN_MIRROR}.xml -DskipTests package
+# The image only needs the application jar; skipping test compilation keeps the
+# build lean. Test sources are compiled and run separately by `mvn test`
+# (19 tests) and in CI, so they are not part of this artifact.
+RUN mvn -B -q -s /build/settings-${MAVEN_MIRROR}.xml -Dmaven.test.skip=true package
 
 # Runtime stage: small JRE, non-root user.
 FROM eclipse-temurin:21-jre-alpine

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchOperationLogs } from '../../shared/api/logs'
+import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
 
 export function OperationLogPage() {
   const { t } = useTranslation()
@@ -30,12 +31,14 @@ export function OperationLogPage() {
 
       <section className="panel panel-flush">
         {logs.isLoading ? (
-          <div className="empty"><div className="empty-note">{t('common.loading')}</div></div>
+          <TableSkeleton cols={5} rows={6} />
         ) : logs.isError ? (
-          <div className="empty">
-            <div className="empty-title">{t('common.loadFailed')}</div>
-            <div className="empty-note">{logs.error instanceof ApiError ? logs.error.message : t('common.networkError')}</div>
-          </div>
+          <EmptyState
+            tone="error"
+            icon="alert"
+            title={t('common.loadFailed')}
+            note={logs.error instanceof ApiError ? logs.error.message : t('common.networkError')}
+          />
         ) : logs.data && logs.data.items.length > 0 ? (
           <table className="table">
             <thead>
@@ -60,10 +63,11 @@ export function OperationLogPage() {
                     <td className="mono cell-muted">{log.targetType ?? '—'} #{log.targetId ?? '—'}</td>
                     <td>
                       <button type="button" className="text-link" onClick={() => setExpanded(isOpen ? null : log.id)}>
+                        <Icon name={isOpen ? 'chevron-down' : 'chevron-right'} size={14} />
                         {isOpen ? t('logs.collapse') : t('logs.expand')}
                       </button>
                       {isOpen && (
-                        <pre className="log-detail mono">{JSON.stringify(detail, null, 2)}</pre>
+                        <pre className="log-detail mono rise">{JSON.stringify(detail, null, 2)}</pre>
                       )}
                     </td>
                   </tr>
@@ -72,10 +76,7 @@ export function OperationLogPage() {
             </tbody>
           </table>
         ) : (
-          <div className="empty">
-            <div className="empty-title">{t('common.empty')}</div>
-            <div className="empty-note">{t('logs.emptyNote')}</div>
-          </div>
+          <EmptyState title={t('common.empty')} note={t('logs.emptyNote')} />
         )}
       </section>
     </>

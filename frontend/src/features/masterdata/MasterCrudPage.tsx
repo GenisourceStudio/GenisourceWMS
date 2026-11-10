@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../shared/api/http'
+import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
 
 export interface Column<T> {
   key: string
@@ -81,25 +82,25 @@ export function MasterCrudPage<T extends { id: number }>({ config }: { config: M
           }}
         />
         <button type="button" className="btn btn-secondary" onClick={() => setSearch(keyword)}>
+          <Icon name="search" size={15} />
           {t('sku.search')}
         </button>
         <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
+          <Icon name="plus" size={15} />
           {config.createLabel}
         </button>
       </div>
 
       <section className="panel panel-flush">
         {query.isLoading ? (
-          <div className="empty">
-            <div className="empty-note">{t('common.loading')}</div>
-          </div>
+          <TableSkeleton cols={config.columns.length} rows={6} />
         ) : query.isError ? (
-          <div className="empty">
-            <div className="empty-title">{t('common.loadFailed')}</div>
-            <div className="empty-note">
-              {query.error instanceof ApiError ? query.error.message : t('common.networkError')}
-            </div>
-          </div>
+          <EmptyState
+            tone="error"
+            icon="alert"
+            title={t('common.loadFailed')}
+            note={query.error instanceof ApiError ? query.error.message : t('common.networkError')}
+          />
         ) : query.data && query.data.items.length > 0 ? (
           <table className="table">
             <thead>
@@ -124,10 +125,7 @@ export function MasterCrudPage<T extends { id: number }>({ config }: { config: M
             </tbody>
           </table>
         ) : (
-          <div className="empty">
-            <div className="empty-title">{t('common.empty')}</div>
-            <div className="empty-note">{config.emptyNote}</div>
-          </div>
+          <EmptyState title={t('common.empty')} note={config.emptyNote} />
         )}
       </section>
 
@@ -157,6 +155,7 @@ function MasterDrawer<T extends { id: number }>({
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
+  useEscapeKey(onClose)
   const { t } = useTranslation()
   const [values, setValues] = useState<Record<string, string>>(
     row ? config.toForm(row) : config.defaults(),
@@ -181,7 +180,7 @@ function MasterDrawer<T extends { id: number }>({
         <div className="drawer-head">
           <h2 className="drawer-title">{row ? config.editLabel : config.createLabel}</h2>
           <button type="button" className="drawer-close" onClick={onClose} aria-label={t('common.close')}>
-            ×
+            <Icon name="close" size={18} />
           </button>
         </div>
 
@@ -238,7 +237,13 @@ function MasterDrawer<T extends { id: number }>({
               {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? t('common.saving') : t('common.save')}
+              {mutation.isPending ? (
+                <>
+                  <ButtonDots /> {t('common.saving')}
+                </>
+              ) : (
+                t('common.save')
+              )}
             </button>
           </div>
         </form>

@@ -7,6 +7,7 @@ import { ApiError } from '../../shared/api/http'
 import { fetchInboundOrders, createInboundOrder, type OrderStatus } from '../../shared/api/orders'
 import { fetchPartners, type Partner } from '../../shared/api/partners'
 import { fetchSkus, type Sku } from '../../shared/api/skus'
+import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
   DRAFT: 'status-draft',
@@ -41,21 +42,21 @@ export function InboundOrderListPage() {
             <option value="COMPLETED">{t('order.completed')}</option>
           </select>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
-            {t('order.createInbound')}
+            <Icon name="plus" size={15} /> {t('order.createInbound')}
           </button>
         </div>
       </div>
 
       <section className="panel panel-flush">
         {orders.isLoading ? (
-          <div className="empty"><div className="empty-note">{t('common.loading')}</div></div>
+          <TableSkeleton cols={5} rows={6} />
         ) : orders.isError ? (
-          <div className="empty">
-            <div className="empty-title">{t('common.loadFailed')}</div>
-            <div className="empty-note">
-              {orders.error instanceof ApiError ? orders.error.message : t('common.networkError')}
-            </div>
-          </div>
+          <EmptyState
+            tone="error"
+            icon="alert"
+            title={t('common.loadFailed')}
+            note={orders.error instanceof ApiError ? orders.error.message : t('common.networkError')}
+          />
         ) : orders.data && orders.data.items.length > 0 ? (
           <table className="table">
             <thead>
@@ -81,7 +82,14 @@ export function InboundOrderListPage() {
                         {t(`order.${order.status.toLowerCase()}`)}
                       </span>
                     </td>
-                    <td className="mono">{done} / {order.lines.length}</td>
+                    <td className="mono">
+                      <div className="progress-wrap">
+                        <span>{done} / {order.lines.length}</span>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ width: `${order.lines.length ? (done / order.lines.length) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                    </td>
                     <td className="mono cell-muted">
                       {dayjs(order.createdAt).format('YYYY.MM.DD HH:mm')}
                     </td>
@@ -91,10 +99,7 @@ export function InboundOrderListPage() {
             </tbody>
           </table>
         ) : (
-          <div className="empty">
-            <div className="empty-title">{t('common.empty')}</div>
-            <div className="empty-note">{t('order.inboundEmptyNote')}</div>
-          </div>
+          <EmptyState title={t('common.empty')} note={t('order.inboundEmptyNote')} />
         )}
       </section>
 
@@ -113,6 +118,7 @@ export function InboundOrderListPage() {
 
 function CreateInboundDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation()
+  useEscapeKey(onClose)
   const [partnerId, setPartnerId] = useState('')
   const [remark, setRemark] = useState('')
   const [lines, setLines] = useState<{ skuId: string; expectedQty: string }[]>([
@@ -146,7 +152,7 @@ function CreateInboundDrawer({ onClose, onSaved }: { onClose: () => void; onSave
       <aside className="drawer" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-head">
           <h2 className="drawer-title">{t('order.createInbound')}</h2>
-          <button type="button" className="drawer-close" onClick={onClose} aria-label={t('common.close')}>×</button>
+          <button type="button" className="drawer-close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={18} /></button>
         </div>
 
         <form
@@ -220,7 +226,7 @@ function CreateInboundDrawer({ onClose, onSaved }: { onClose: () => void; onSave
               className="btn btn-secondary"
               onClick={() => setLines((prev) => [...prev, { skuId: '', expectedQty: '1' }])}
             >
-              {t('order.addLine')}
+              <Icon name="plus" size={14} /> {t('order.addLine')}
             </button>
           </div>
 
@@ -229,7 +235,7 @@ function CreateInboundDrawer({ onClose, onSaved }: { onClose: () => void; onSave
           <div className="drawer-foot">
             <button type="button" className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? t('common.saving') : t('common.save')}
+              {mutation.isPending ? <><ButtonDots />{t('common.saving')}</> : t('common.save')}
             </button>
           </div>
         </form>

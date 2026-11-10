@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../shared/api/http'
 import { createSku, fetchSkus, updateSku, type Sku } from '../../shared/api/skus'
+import { Icon, TableSkeleton, EmptyState, ButtonDots, useEscapeKey } from '../../shared/ui/Icon'
 
 export function SkuListPage({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useTranslation()
@@ -37,25 +38,25 @@ export function SkuListPage({ embedded = false }: { embedded?: boolean } = {}) {
             }}
           />
           <button type="button" className="btn btn-secondary" onClick={() => setSearch(keyword)}>
+            <Icon name="search" size={15} />
             {t('sku.search')}
           </button>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
+            <Icon name="plus" size={15} />
             {t('sku.create')}
           </button>
       </div>
 
       <section className="panel panel-flush">
         {query.isLoading ? (
-          <div className="empty">
-            <div className="empty-note">{t('common.loading')}</div>
-          </div>
+          <TableSkeleton cols={5} rows={6} />
         ) : query.isError ? (
-          <div className="empty">
-            <div className="empty-title">{t('common.loadFailed')}</div>
-            <div className="empty-note">
-              {query.error instanceof ApiError ? query.error.message : t('common.networkError')}
-            </div>
-          </div>
+          <EmptyState
+            tone="error"
+            icon="alert"
+            title={t('common.loadFailed')}
+            note={query.error instanceof ApiError ? query.error.message : t('common.networkError')}
+          />
         ) : query.data && query.data.items.length > 0 ? (
           <table className="table">
             <thead>
@@ -84,10 +85,7 @@ export function SkuListPage({ embedded = false }: { embedded?: boolean } = {}) {
             </tbody>
           </table>
         ) : (
-          <div className="empty">
-            <div className="empty-title">{t('common.empty')}</div>
-            <div className="empty-note">{t('sku.emptyNote')}</div>
-          </div>
+          <EmptyState title={t('common.empty')} note={t('sku.emptyNote')} />
         )}
       </section>
 
@@ -119,6 +117,7 @@ function SkuDrawer({
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
+  useEscapeKey(onClose)
   const { t } = useTranslation()
   const [code, setCode] = useState(sku?.code ?? '')
   const [name, setName] = useState(sku?.name ?? '')
@@ -148,7 +147,7 @@ function SkuDrawer({
         <div className="drawer-head">
           <h2 className="drawer-title">{sku ? t('sku.edit') : t('sku.create')}</h2>
           <button type="button" className="drawer-close" onClick={onClose} aria-label={t('common.close')}>
-            ×
+            <Icon name="close" size={18} />
           </button>
         </div>
 
@@ -211,7 +210,13 @@ function SkuDrawer({
               {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? t('common.saving') : t('common.save')}
+              {mutation.isPending ? (
+                <>
+                  <ButtonDots /> {t('common.saving')}
+                </>
+              ) : (
+                t('common.save')
+              )}
             </button>
           </div>
         </form>

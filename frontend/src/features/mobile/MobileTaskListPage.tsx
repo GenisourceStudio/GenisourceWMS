@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchInboundOrders } from '../../shared/api/orders'
 import { fetchOutboundOrders } from '../../shared/api/outbound'
+import { EmptyState, Icon, TableSkeleton } from '../../shared/ui/Icon'
 
 /** Light card list of pending documents — only the executing page is dark. */
 export function MobileTaskListPage() {
@@ -21,27 +22,28 @@ export function MobileTaskListPage() {
     <div className="mobile-task-list">
       <header className="mobile-list-head">
         <h1 className="page-title">{t('scan.tasks')}</h1>
-        <Link to="/" className="text-link">{t('scan.backConsole')}</Link>
+        <Link to="/" className="text-link">
+          <Icon name="arrow-left" size={14} />{t('scan.backConsole')}
+        </Link>
       </header>
 
       {loading ? (
-        <div className="empty"><div className="empty-note">{t('common.loading')}</div></div>
+        <div className="task-cards"><TableSkeleton cols={2} rows={4} /></div>
       ) : error ? (
-        <div className="empty">
-          <div className="empty-title">{t('common.loadFailed')}</div>
-          <div className="empty-note">{error instanceof ApiError ? error.message : t('common.networkError')}</div>
-        </div>
+        <EmptyState
+          tone="error"
+          icon="alert"
+          title={t('common.loadFailed')}
+          note={error instanceof ApiError ? error.message : t('common.networkError')}
+        />
       ) : inItems.length === 0 && outItems.length === 0 ? (
-        <div className="empty">
-          <div className="empty-title">{t('common.empty')}</div>
-          <div className="empty-note">{t('scan.noTasks')}</div>
-        </div>
+        <EmptyState title={t('common.empty')} note={t('scan.noTasks')} />
       ) : (
         <div className="task-cards">
           {inItems.map((order) => (
             <Link key={`in-${order.id}`} to={`/m/inbound/${order.id}`} className="task-card">
               <div className="task-card-head">
-                <span className="mono cell-code">{order.orderNo}</span>
+                <span className="cell-icon mono cell-code"><Icon name="inbound" size={15} />{order.orderNo}</span>
                 <span className="status status-done">{t('nav.inbound')}</span>
               </div>
               <div className="task-card-meta">
@@ -49,14 +51,15 @@ export function MobileTaskListPage() {
                 <span className="mono">{order.lines.filter((l) => l.status === 'DONE').length} / {order.lines.length} {t('scan.linesDone')}</span>
               </div>
               <div className="task-card-foot mono">
-                {dayjs(order.createdAt).format('YYYY.MM.DD HH:mm')}<span>→ {t('scan.startJob')}</span>
+                {dayjs(order.createdAt).format('YYYY.MM.DD HH:mm')}
+                <span><Icon name="arrow-right" size={13} />{t('scan.startJob')}</span>
               </div>
             </Link>
           ))}
           {outItems.map((order) => (
             <Link key={`out-${order.id}`} to={`/m/outbound/${order.id}`} className="task-card">
               <div className="task-card-head">
-                <span className="mono cell-code">{order.orderNo}</span>
+                <span className="cell-icon mono cell-code"><Icon name="outbound" size={15} />{order.orderNo}</span>
                 <span className="status status-ongoing">{t('nav.outbound')}</span>
               </div>
               <div className="task-card-meta">
@@ -64,7 +67,8 @@ export function MobileTaskListPage() {
                 <span className="mono">{order.lines.filter((l) => l.status === 'DONE').length} / {order.lines.length} {t('scan.linesDone')}</span>
               </div>
               <div className="task-card-foot mono">
-                {dayjs(order.createdAt).format('YYYY.MM.DD HH:mm')}<span>→ {t('scan.startJob')}</span>
+                {dayjs(order.createdAt).format('YYYY.MM.DD HH:mm')}
+                <span><Icon name="arrow-right" size={13} />{t('scan.startJob')}</span>
               </div>
             </Link>
           ))}

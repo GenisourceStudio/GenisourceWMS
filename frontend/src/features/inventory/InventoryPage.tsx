@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ApiError } from '../../shared/api/http'
 import { fetchInventory, fetchTransactions } from '../../shared/api/inventory'
+import { Icon, TableSkeleton, EmptyState } from '../../shared/ui/Icon'
 
 export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
   const { t } = useTranslation()
@@ -37,21 +38,21 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
             onKeyDown={(e) => { if (e.key === 'Enter') setSearch(keyword) }}
           />
           <button type="button" className="btn btn-secondary" onClick={() => setSearch(keyword)}>
-            {t('sku.search')}
+            <Icon name="search" size={15} /> {t('sku.search')}
           </button>
         </div>
       </div>
 
       <section className="panel panel-flush">
         {query.isLoading ? (
-          <div className="empty"><div className="empty-note">{t('common.loading')}</div></div>
+          <TableSkeleton cols={isStock ? 5 : 8} rows={6} />
         ) : query.isError ? (
-          <div className="empty">
-            <div className="empty-title">{t('common.loadFailed')}</div>
-            <div className="empty-note">
-              {query.error instanceof ApiError ? query.error.message : t('common.networkError')}
-            </div>
-          </div>
+          <EmptyState
+            tone="error"
+            icon="alert"
+            title={t('common.loadFailed')}
+            note={query.error instanceof ApiError ? query.error.message : t('common.networkError')}
+          />
         ) : isStock && stock.data ? (
           stock.data.items.length > 0 ? (
             <table className="table">
@@ -77,10 +78,7 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
               </tbody>
             </table>
           ) : (
-            <div className="empty">
-              <div className="empty-title">{t('common.empty')}</div>
-              <div className="empty-note">{t('inventory.emptyNote')}</div>
-            </div>
+            <EmptyState title={t('common.empty')} note={t('inventory.emptyNote')} />
           )
         ) : !isStock && txns.data ? (
           txns.data.items.length > 0 ? (
@@ -108,7 +106,7 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
                     </td>
                     <td className="mono cell-code">{txn.skuCode}</td>
                     <td className="mono">{txn.locationCode}</td>
-                    <td className="num mono">{txn.qtyDelta > 0 ? `+${txn.qtyDelta}` : txn.qtyDelta}</td>
+                    <td className={`num mono ${txn.qtyDelta > 0 ? 'delta-up' : 'delta-down'}`}>{txn.qtyDelta > 0 ? `+${txn.qtyDelta}` : txn.qtyDelta}</td>
                     <td className="num mono">{txn.qtyAfter}</td>
                     <td className="mono cell-muted">{txn.orderNo}</td>
                     <td>{txn.operatorName}</td>
@@ -117,10 +115,7 @@ export function InventoryPage({ mode }: { mode: 'stock' | 'ledger' }) {
               </tbody>
             </table>
           ) : (
-            <div className="empty">
-              <div className="empty-title">{t('common.empty')}</div>
-              <div className="empty-note">{t('inventory.ledgerEmptyNote')}</div>
-            </div>
+            <EmptyState title={t('common.empty')} note={t('inventory.ledgerEmptyNote')} />
           )
         ) : null}
       </section>
